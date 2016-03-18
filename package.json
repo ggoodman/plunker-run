@@ -1,0 +1,40 @@
+{
+  "name": "plunker-run",
+  "version": "1.0.0",
+  "description": "Plunker.NEXT preview server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ggoodman/plunker-run.git"
+  },
+  "keywords": [
+    "plunker"
+  ],
+  "author": "Geoff Goodman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ggoodman/plunker-run/issues"
+  },
+  "homepage": "https://github.com/ggoodman/plunker-run#readme",
+  "dependencies": {
+    "bluebird": "^3.3.4",
+    "boom": "^3.1.2",
+    "ejs": "^2.4.1",
+    "good": "^6.6.0",
+    "good-console": "^5.3.1",
+    "hapi": "^13.2.1",
+    "hapi-qs": "^1.1.0",
+    "highlight.js": "^9.2.0",
+    "inert": "^3.2.0",
+    "joi": "^8.0.4",
+    "less": "^2.6.1",
+    "lodash": "^4.6.1",
+    "lru-cache": "^4.0.0",
+    "markdown-it": "^6.0.0",
+    "mime-types": "^2.1.10",
+    "vision": "^4.0.1"
+  }
+}
