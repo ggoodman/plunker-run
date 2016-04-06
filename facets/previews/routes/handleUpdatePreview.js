@@ -8,12 +8,12 @@ module.exports = {
     validate: {
         params: {
             previewId: Joi.string().alphanum().required(),
-            pathname: Joi.string().regex(/^\/?[._$a-zA-Z0-9][\w-]*(?:\.[\w-]+)*(?:\/[._$a-zA-Z0-9][\w-]*(?:\.[\w-]+)*)*$/).allow('').default('').optional(),
+            pathname: Joi.string().regex(/^\/?[._$@a-zA-Z0-9][\w-]*(?:\.[\w-]+)*(?:\/[._$@a-zA-Z0-9][\w-]*(?:\.[\w-]+)*)*$/).allow('').default('').optional(),
         },
         payload: Joi.object().keys({
             sessid: Joi.string().optional(),
             files: Joi.object().pattern(
-                /^\/?[._$a-zA-Z0-9][\w-]*(?:\.[\w-]+)*(?:\/[a-zA-Z0-9][\w-]*(?:\.[\w-]+)*)*$/,
+                /^\/?[._$@a-zA-Z0-9][\w-]*(?:\.[\w-]+)*(?:\/[._$@a-zA-Z0-9][\w-]*(?:\.[\w-]+)*)*$/,
                 Joi.object().keys({
                     content: Joi.string().allow('').required(),
                     encoding: Joi.string().allow('utf8').default('utf8').optional(),
@@ -32,11 +32,17 @@ module.exports = {
         assign: 'rendered',
     }],
     handler: function(request, reply) {
-        var rendered = request.pre.rendered;
-        var response = reply(rendered.payload)
+        const rendered = request.pre.rendered;
+        const statusCode = rendered.statusCode || 200;
+        const response = reply(rendered.payload)
             .etag(request.pre.preview.timestamp)
-            .header("X-XSS-Protection", 0) // Since we send code over the wire
-            .encoding(rendered.encoding);
+            .encoding(rendered.encoding || 'utf8')
+            .code(statusCode);
+        
+        if (statusCode === 200) {
+            response
+                .header("X-XSS-Protection", 0); // Since we send code over the wire
+        }
 
         _.forEach(rendered.headers, function(val, key) {
             response.header(key, val);

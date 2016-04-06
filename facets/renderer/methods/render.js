@@ -8,6 +8,7 @@ module.exports = render;
 
 const renderers = [
     require('../lib/staticRenderer'),
+    require('../lib/npmcdnRenderer'),
     require('../lib/lessRenderer'),
     require('../lib/markdownRenderer'),
 ];
@@ -26,7 +27,7 @@ function render(request) {
         const render = findRenderer(preview, candidate);
         
         if (render) {
-            return Bluebird.resolve(render());
+            return Bluebird.resolve(render(request));
         }
     }
     

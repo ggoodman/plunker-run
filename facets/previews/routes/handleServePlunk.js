@@ -7,12 +7,12 @@ const _ = require('lodash');
 module.exports = {
     validate: {
         params: {
-            previewId: Joi.string().alphanum().required(),
+            plunkId: Joi.string().alphanum().required(),
             pathname: Joi.string().regex(/^\/?[._$@a-zA-Z0-9][\w-]*(?:\.[\w-]+)*(?:\/[._$@a-zA-Z0-9][\w-]*(?:\.[\w-]+)*)*$/).allow('').default('').optional(),
         },
     },
     pre: [{
-        method: 'cache.get(params.previewId)',
+        method: 'previews.fromPlunk(params.plunkId)',
         assign: 'preview',
     }, {
         method: 'renderer.render',

@@ -12,5 +12,7 @@ function onPreResponse(request, reply) {
     
     const error = response;
     
-    reply.view('error', error.output.payload);
+    reply
+        .view('error', error.output.payload)
+        .code(error.output.statusCode);
 }

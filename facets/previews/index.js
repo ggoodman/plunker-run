@@ -19,6 +19,14 @@ exports.register = function(server, options, next) {
         },
     });
     
+    server.method({
+        name: 'previews.fromPlunk',
+        method: require('./methods/fromPlunk'),
+        options: {
+            callback: false,
+        },
+    });
+    
     server.route({
         method: 'GET',
         path: '/{previewId}/{pathname*}',
@@ -29,6 +37,12 @@ exports.register = function(server, options, next) {
         method: 'POST',
         path: '/{previewId}/{pathname*}',
         config: require('./routes/handleUpdatePreview'),
+    });
+    
+    server.route({
+        method: 'GET',
+        path: '/plunks/{plunkId}/{pathname*}',
+        config: require('./routes/handleServePlunk'),
     });
     
     server.ext({
