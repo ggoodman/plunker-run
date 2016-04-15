@@ -17,7 +17,7 @@ function Preview(id, entries) {
     this.entries = _.mapValues(entries, (entry, pathname) => ({
         pathname,
         content: new Buffer(entry.content, entry.encoding || 'utf8'),
-        // encoding: entry.encoding || 'utf8',
+        encoding: entry.encoding || 'utf8',
     }));
 }
 

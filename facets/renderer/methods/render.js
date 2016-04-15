@@ -7,6 +7,7 @@ const _ = require('lodash');
 module.exports = render;
 
 const renderers = [
+    require('../lib/babelRenderer'),
     require('../lib/staticRenderer'),
     require('../lib/npmcdnRenderer'),
     require('../lib/lessRenderer'),
@@ -27,7 +28,7 @@ function render(request) {
         const render = findRenderer(preview, candidate);
         
         if (render) {
-            return Bluebird.resolve(render(request));
+            return Bluebird.try(() => render(request));
         }
     }
     
