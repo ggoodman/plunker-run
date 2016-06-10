@@ -8,7 +8,7 @@ const Sass = require('node-sass');
 const Wreck = require('wreck');
 
 
-const REQUEST_MATCH = /\.css/;
+const REQUEST_MATCH = /\.css$/;
 const SOURCE_EXT = ['.sass', '.scss'];
 
 

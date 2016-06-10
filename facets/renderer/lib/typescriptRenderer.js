@@ -9,7 +9,7 @@ const Typescript = require('typescript');
 const _ = require('lodash');
 
 
-const REQUEST_MATCH = /\.js/;
+const REQUEST_MATCH = /\.js$/;
 const SOURCE_EXT = ['.ts'];
 const USE_PROGRAM = false; // If we ever wanted to do multi-file compilation, this is a flag away.
 

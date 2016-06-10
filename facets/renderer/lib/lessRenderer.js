@@ -4,7 +4,7 @@ const Bluebird = require('bluebird');
 const Less = require('less');
 
 
-const REQUEST_MATCH = /\.css/;
+const REQUEST_MATCH = /\.css$/;
 const SOURCE_EXT = '.less';
 
 

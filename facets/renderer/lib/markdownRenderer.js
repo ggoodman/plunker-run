@@ -23,7 +23,7 @@ const md = Markdown({
 });
 
 
-const REQUEST_MATCH = /\.html/;
+const REQUEST_MATCH = /\.html$/;
 const SOURCE_EXT = ['.md', '.markdown'];
 
 

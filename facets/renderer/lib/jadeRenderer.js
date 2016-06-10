@@ -3,7 +3,7 @@ const Boom = require('boom');
 const Jade = require('jade');
 
 
-const REQUEST_MATCH = /\.html/;
+const REQUEST_MATCH = /\.html$/;
 const SOURCE_EXT = '.jade';
 
 

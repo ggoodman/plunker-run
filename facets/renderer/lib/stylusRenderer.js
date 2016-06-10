@@ -3,7 +3,7 @@ const Boom = require('boom');
 const Stylus = require('stylus');
 
 
-const REQUEST_MATCH = /\.css/;
+const REQUEST_MATCH = /\.css$/;
 const SOURCE_EXT = '.styl';
 
 

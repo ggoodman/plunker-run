@@ -15,6 +15,7 @@ require('babel-plugin-transform-es2015-modules-systemjs');
 
 module.exports = compile;
 
+console.log('Started babel worker');
 
 function compile(previewId, entries, pathname, cb) {
     const babelRc = entries['.babelrc'];

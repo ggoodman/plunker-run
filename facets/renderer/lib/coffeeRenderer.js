@@ -5,7 +5,7 @@ const Boom = require('boom');
 const CoffeeScript = require('coffee-script');
 
 
-const REQUEST_MATCH = /\.js/;
+const REQUEST_MATCH = /\.js$/;
 const SOURCE_EXT = '.coffee';
 
 
