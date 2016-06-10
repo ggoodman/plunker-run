@@ -7,6 +7,13 @@ const _ = require('lodash');
 const server = new Hapi.Server();
 
 
+process.on('uncaughtException', function (e) {
+    console.error('[UNCAUGHT EXCEPTION] %s', e.message, e.stack);
+    
+    process.exit(1);
+});
+
+
 server.connection({
     host: _.get(Config, 'run.connection.host', 'run.plnkr.co'),
     address: _.get(Config, 'run.connection.address', '127.0.0.1'),

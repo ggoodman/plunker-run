@@ -9,7 +9,7 @@ const _ = require('lodash');
 module.exports = fromPlunk;
 
 
-function fromPlunk(plunkId) {
+function fromPlunk(plunkId, cb) {
     const config = this.config;
     const server = this.server;
     
@@ -21,12 +21,14 @@ function fromPlunk(plunkId) {
         const preview = server.methods.cache.get(slug);
         
         return preview
-            ?   preview
+            ?   cb(null, preview)
             :   fetchPlunk(plunkId)
-                    .then(plunk => fetchTree(plunk.tree_sha))
                     .then(mapTree)
                     .then(entries => Preview.fromEntries(slug, entries))
-                    .tap(preview => server.methods.cache.put(slug, preview));
+                    .tap(preview => {
+                        server.methods.cache.put(preview);
+                    })
+                    .asCallback(cb);
     }
     
     function fetchPlunk(plunkId) {
@@ -49,38 +51,13 @@ function fromPlunk(plunkId) {
         });
     }
     
-    
-    function fetchTree(treeSha) {
-        return new Bluebird((resolve, reject) => {
-            Wreck.get(`${config.api.uri}/trees/${treeSha}`, {
-                timeout: 3000,
-                json: true,
-            }, onResponse);
-            
-            
-            function onResponse(err, response, payload) {
-                if (err) return reject(err);
-                
-                switch (response.statusCode) {
-                    case 200: return resolve(payload);
-                    case 404: return reject(Boom.notFound());
-                    default: return reject(Boom.badGateway());
-                }
-            }
+    function mapTree(plunk) {
+        return _.mapValues(plunk.files, (entry, pathname) => {
+            return {
+                pathname,
+                content: entry.content,
+                encoding: 'utf8',
+            };
         });
-    }
-    
-    function mapTree(entries) {
-        return _(entries)
-            .filter({ type: 'file' })
-            .keyBy('pathname')
-            .mapValues(entry => {
-                return {
-                    pathname: entry.pathname,
-                    content: entry.content,
-                    encoding: entry.charset,
-                };
-            })
-            .value();
     }
 }

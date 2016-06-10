@@ -37,7 +37,8 @@ exports.register = function(server, options, next) {
                         name: 'Squeeze',
                         args: [{ error: '*', log: '*', response: '*' }]
                     }, {
-                        module: 'good-console'
+                        module: 'good-console',
+                        args: [{ color: false }],
                     }, 'stdout'],
                 },
             },

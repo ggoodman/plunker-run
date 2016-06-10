@@ -25,11 +25,6 @@ module.exports = {
             .etag(rendered.etag || request.pre.preview.timestamp)
             .encoding(rendered.encoding || 'utf8')
             .code(statusCode);
-        
-        if (statusCode === 200) {
-            response
-                .header("X-XSS-Protection", 0); // Since we send code over the wire
-        }
 
         _.forEach(rendered.headers, function(val, key) {
             response.header(key, val);

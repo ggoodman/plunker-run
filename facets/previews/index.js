@@ -23,7 +23,7 @@ exports.register = function(server, options, next) {
         name: 'previews.fromPlunk',
         method: require('./methods/fromPlunk'),
         options: {
-            callback: false,
+            callback: true,
         },
     });
     
