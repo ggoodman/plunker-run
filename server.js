@@ -15,7 +15,7 @@ server.connection({
 });
 
 server.register({
-    register: require('./'),
+    register: require('./index'),
     options: { config: Config },
 }, {
     select: ['run'],

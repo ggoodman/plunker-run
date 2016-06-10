@@ -35,13 +35,13 @@ exports.register = function(server, options, next) {
     
     server.route({
         method: 'GET',
-        path: '/preview/{previewId}/{pathname*}',
+        path: '/{previewId}/{pathname*}',
         config: require('./routes/handleServePreview'),
     });
     
     server.route({
         method: 'POST',
-        path: '/preview/{previewId}/{pathname*}',
+        path: '/{previewId}/{pathname*}',
         config: require('./routes/handleUpdatePreview'),
     });
     
