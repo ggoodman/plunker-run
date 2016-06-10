@@ -12,6 +12,7 @@ exports.register = function(server, options, next) {
     });
     
     server.expose('lru', new LRUCache({
+        dispose: (previewId, preview) => preview.destroy(),
         max: 100,
         maxAge: 1000 * 60 * 5,
     }));

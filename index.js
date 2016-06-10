@@ -5,31 +5,70 @@ const Package = require('./package.json');
 exports.register = function(server, options, next) {
     server.log(['info', 'init'], `Registering: ${Package.name}`);
     
-    server.app.config = options.config;
-
-    const registration = server.register([{
-        register: require('hapi-qs'),
-        options: {
-            qsOptions: {
-                allowDots: false,
-            }
-        },
-    }, {
-        register: require('vision'),
-        options: options,
-    }, {
-        register: require('./facets/cache'),
-        options: options,
-    }, {
-        register: require('./facets/renderer'),
-        options: options,
-    }, {
-        register: require('./facets/previews'),
-        options: options,
-    }]);
+    server.bind({
+        config: options.config,
+        server: server
+    });
     
-    return Bluebird.resolve(registration)
-        .asCallback(next);
+    server.register([
+        {
+            register: require('hapi-qs'),
+            options: {
+                qsOptions: {
+                    allowDots: false,
+                }
+            },
+        },
+        {
+            register: require('inert'),
+        },
+        {
+            register: require('vision'),
+        },
+        {
+            register: require('good'),
+            options: {
+                ops: {
+                    interval: 1000
+                },
+                reporters: {
+                    console: [{
+                        module: 'good-squeeze',
+                        name: 'Squeeze',
+                        args: [{ error: '*', log: '*', response: '*' }]
+                    }, {
+                        module: 'good-console'
+                    }, 'stdout'],
+                },
+            },
+        },
+        {
+            register: require('./facets/cache'),
+            options: options,
+        },
+        {
+            register: require('./facets/renderer'),
+            options: options,
+        },
+        {
+            register: require('./facets/previews'),
+            options: options,
+        },
+        {
+            register: require('./facets/static'),
+            options: options,
+        },
+    ], err => {
+        if (err) {
+            server.log(['error', 'init'], `Failed to start ${exports.register.attributes.name}@${exports.register.attributes.version}: ${err.message}.`);
+            
+            return next(err);
+        }
+        
+        server.log(['info', 'init'], `Started ${exports.register.attributes.name}@${exports.register.attributes.version}.`);
+        
+        next(err);
+    });
 };
 
 exports.register.attributes = {

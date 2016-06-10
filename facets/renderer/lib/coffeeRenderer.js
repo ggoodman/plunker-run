@@ -1,15 +1,16 @@
 'use strict';
 
 const Bluebird = require('bluebird');
-const Less = require('less');
+const Boom = require('boom');
+const CoffeeScript = require('coffee-script');
 
 
-const REQUEST_MATCH = /\.css/;
-const SOURCE_EXT = '.less';
+const REQUEST_MATCH = /\.js/;
+const SOURCE_EXT = '.coffee';
 
 
 module.exports = {
-    name: 'less',
+    name: 'coffee-script',
     getRenderer,
 };
 
@@ -26,7 +27,6 @@ function getRenderer(preview, pathname) {
     
     
     function render(request) {
-        const code = entry.content.toString('utf8');
         const ifNoneMatch = request.headers['if-none-match'];
         const etagRx = new RegExp(`^"${entry.etag}\-${exports.name}-(gzip|deflate)"`);
         
@@ -41,21 +41,20 @@ function getRenderer(preview, pathname) {
             });
         }
         
-        return Bluebird.try(() => Less.render(code))
+        return Bluebird.try(() => CoffeeScript.compile(entry.content.toString('utf8')))
             .catch(e => {
                 preview.log({
-                    renderer: 'less',
+                    renderer: 'coffee-script',
                     level: 'error',
                     pathname: entry.pathname,
-                    row: e.line,
-                    column: e.column,
+                    row: e.location.first_line,
+                    column: e.location.first_column,
                     message: e.message,
-                    context: e.extract.join('\n'),
+                    context: e.toString(),
                 });
                 
-                throw e;
+                throw Boom.wrap(e, 400);
             })
-            .get('css')
             .then(buildReply);
     }
     
@@ -64,8 +63,7 @@ function getRenderer(preview, pathname) {
             encoding: 'utf-8',
             etag: entry.etag + '-' + exports.name,
             headers: {
-                'ETag': preview.etag,
-                'Content-Type': 'text/css',
+                'Content-Type': 'application/javascript',
             },
             payload,
         };

@@ -29,13 +29,19 @@ exports.register = function(server, options, next) {
     
     server.route({
         method: 'GET',
-        path: '/{previewId}/{pathname*}',
+        path: '/logs/{previewId}',
+        config: require('./routes/handlePreviewLogs'),
+    });
+    
+    server.route({
+        method: 'GET',
+        path: '/preview/{previewId}/{pathname*}',
         config: require('./routes/handleServePreview'),
     });
     
     server.route({
         method: 'POST',
-        path: '/{previewId}/{pathname*}',
+        path: '/preview/{previewId}/{pathname*}',
         config: require('./routes/handleUpdatePreview'),
     });
     

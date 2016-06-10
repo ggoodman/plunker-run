@@ -8,10 +8,15 @@ module.exports = render;
 
 const renderers = [
     require('../lib/babelRenderer'),
+    require('../lib/typescriptRenderer'),
     require('../lib/staticRenderer'),
     require('../lib/npmcdnRenderer'),
     require('../lib/lessRenderer'),
     require('../lib/markdownRenderer'),
+    require('../lib/coffeeRenderer'),
+    require('../lib/jadeRenderer'),
+    require('../lib/sassRenderer'),
+    require('../lib/stylusRenderer'),
 ];
 
 
@@ -22,6 +27,10 @@ function render(request) {
     const candidates = pathname
         ?   [pathname]
         :   ['index.html', 'README.html', 'demo.html'];
+    
+    if (!preview) {
+        return Bluebird.reject(Boom.notFound());
+    }
     
         
     for (let candidate of candidates) {

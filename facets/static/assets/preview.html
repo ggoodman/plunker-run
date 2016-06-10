@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+
+<head>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        *, :before, :after {
+            box-sizing: border-box;
+        }
+        
+        #preview {
+            border: 0;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+    <script>
+        window.parent.postMessage({
+            type: 'ready',
+        }, '*');
+        
+        window.addEventListener('message', onPostMessage);
+        
+        
+        function onPostMessage(event) {
+            if (event.source !== window.parent) {
+                return console.warn('Preview proxy received message from unknown source with url: %s', event.origin);
+            }
+            
+            var data = event.data;
+            
+            if (typeof data !== 'object' || !data.type) {
+                return console.warn('Preview proxy received unexpected message:', data);
+            }
+            
+            switch (data.type) {
+                case 'request': {
+                    if (!event.ports[0]) {
+                        return console.warn('Preview proxy received a request without an attached MessagePort');
+                    }
+                    
+                    return handleRequest(data[data.type], function (err, data) {
+                        if (err) {
+                            data.port.postMessage({
+                                type: 'error',
+                                error: err,
+                            });
+                            
+                            return data.port.close();
+                        }
+                        
+                        event.ports[0].postMessage({
+                            type: 'response',
+                            response: data,
+                        });
+                        
+                        return event.ports[0].close();
+                    });
+                }
+                default: return console.warn('Preview proxy unable to handle messages with type %s', data.type);
+            }
+        }
+        
+        function handleRequest(data, cb) {
+            switch (data.type) {
+                case 'update': {
+                    var update = data[data.type];
+                    var form = document.createElement('form');
+                    var input = document.createElement('input');
+                    var iframe = document.getElementById('preview');
+                    
+                    for (var pathname in update.entries) {
+                        var entry = update.entries[pathname];
+                        
+                        input.type = 'hidden';
+                        input.name = 'files[' + pathname + '][content]';
+                        input.value = entry.content;
+                        
+                        form.appendChild(input.cloneNode());
+                        
+                        input.type = 'hidden';
+                        input.name = 'files[' + pathname + '][encoding]';
+                        input.value = entry.encoding;
+                        
+                        form.appendChild(input.cloneNode());
+                    }
+                    
+                    form.style.display = 'none';
+                    form.action = '//run.plunker.co/preview/' + update.id + '/' + update.path;
+                    form.method = 'POST';
+                    form.target = 'preview';
+                    
+                    document.body.appendChild(form);
+                    
+                    iframe.onload = function (e) {
+                        cb(null);
+                        
+                        iframe.onload = null;
+                    };
+                    
+                    form.submit();
+                    
+                    document.body.removeChild(form);
+                }
+            }
+        }
+    </script>
+</head>
+
+<body><iframe id="preview" name="preview" src="about:blank" frameborder="0" width="100%" height="100%"></iframe></body>
+
+</html>

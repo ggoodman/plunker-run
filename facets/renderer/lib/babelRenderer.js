@@ -47,7 +47,21 @@ function getRenderer(preview, pathname) {
     return;
 
 
-    function render() {
+    function render(request) {
+        const ifNoneMatch = request.headers['if-none-match'];
+        const etagRx = new RegExp(`^"${entry.etag}\-${exports.name}-(gzip|deflate)"`);
+        
+        if (etagRx.test(ifNoneMatch)) {
+            return Bluebird.resolve({
+                encoding: 'utf-8',
+                etag: entry.etag + '-' + exports.name,
+                headers: {
+                    'Content-Type': 'application/javascript',
+                },
+                payload: '',
+            });
+        }
+        
         return new Bluebird((resolve, reject) => {
             const entries = _.reduce(preview.entries, (acc, entry, pathname) => 
                 (entry.encoding === 'utf-8' || entry.encoding === 'utf8')
@@ -61,13 +75,25 @@ function getRenderer(preview, pathname) {
             
             function onWorkerResponse(err, result) {
                 if (err) {
+                    if (err.type === 'SyntaxError') {
+                        preview.log({
+                            renderer: 'babel',
+                            level: 'error',
+                            pathname: entry.pathname,
+                            row: err.loc.line,
+                            column: err.loc.column,
+                            message: err.message,
+                            context: err.codeFrame,
+                        });
+                    }
+                    
                     return reject(Boom.wrap(err, 400));
                 }
                 
                 return resolve({
                     encoding: 'utf-8',
+                    etag: entry.etag + '-' + exports.name,
                     headers: {
-                        'ETag': preview.etag,
                         'Content-Type': 'text/javascript',
                     },
                     payload: result.code,

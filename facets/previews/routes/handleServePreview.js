@@ -1,14 +1,14 @@
 'use strict';
 
-const Joi = require('joi');
+const Schema = require('../schema');
 const _ = require('lodash');
 
 
 module.exports = {
     validate: {
         params: {
-            previewId: Joi.string().alphanum().required(),
-            pathname: Joi.string().regex(/^\/?[._$@a-zA-Z0-9][\w-]*(?:\.[\w-]+)*(?:\/[._$@a-zA-Z0-9][\w-]*(?:\.[\w-]+)*)*$/).allow('').default('').optional(),
+            previewId: Schema.previewId.required(),
+            pathname: Schema.pathname.default('').optional(),
         },
     },
     pre: [{
@@ -22,7 +22,7 @@ module.exports = {
         const rendered = request.pre.rendered;
         const statusCode = rendered.statusCode || 200;
         const response = reply(rendered.payload)
-            .etag(request.pre.preview.timestamp)
+            .etag(rendered.etag || request.pre.preview.timestamp)
             .encoding(rendered.encoding || 'utf8')
             .code(statusCode);
         

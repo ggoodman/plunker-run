@@ -1,56 +1,32 @@
 'use strict';
 
-const Joi = require('joi');
-const _ = require('lodash');
+const Schema = require('../schema');
 
 
 module.exports = {
     validate: {
         params: {
-            previewId: Joi.string().alphanum().required(),
-            pathname: Joi.string().regex(/^\/?[._$@a-zA-Z0-9][\w-]*(?:\.[\w-]+)*(?:\/[._$@a-zA-Z0-9][\w-]*(?:\.[\w-]+)*)*$/).allow('').default('').optional(),
+            previewId: Schema.previewId.required(),
+            pathname: Schema.pathname.default('').optional(),
         },
-        payload: Joi.object().keys({
-            sessid: Joi.string().optional(),
-            files: Joi.object().pattern(
-                /^\/?[._$a-zA-Z0-9][\w-]*(?:\.[\w-]+)*(?:\/[a-zA-Z0-9][\w-]*(?:\.[\w-]+)*)*$/,
-                Joi.object().keys({
-                    content: Joi.string().allow('').required(),
-                    encoding: Joi.string().allow('utf8').default('utf8').optional(),
-                })
-            ).min(1).required(),
-        }).required()
+        payload: Schema.preview.required()
     },
     pre: [{
-        method: 'previews.fromEntries(params.previewId, payload.files)',
-        assign: 'preview',
-    }, {
-        method: 'cache.put(pre.preview)',
+        method: 'cache.get(params.previewId)',
         assign: 'cached',
-    }, {
-        method: 'renderer.render',
-        assign: 'rendered',
     }],
+    cors: true,
     handler: function(request, reply) {
-        const rendered = request.pre.rendered;
-        const statusCode = rendered.statusCode || 200;
-        const response = reply(rendered.payload)
-            .code(statusCode);
+        const cached = request.pre.cached;
         
-        if (statusCode === 200) {
-            response
-                .etag(request.pre.preview.timestamp)
-                .header("X-XSS-Protection", 0) // Since we send code over the wire
-                .encoding(rendered.encoding);
+        if (cached) {
+            cached.update(request.payload.files);
+        } else {
+            const preview = request.server.methods.previews.fromEntries(request.params.previewId, request.payload.files);
+            
+            request.server.methods.cache.put(preview);
         }
-
-        _.forEach(rendered.headers, function(val, key) {
-            response.header(key, val);
-        });
-
-        // var previewId = request.params.previewId;
-        // var size = parseInt(request.headers['content-length'], 10);
-
-        // request.visitor.event('previews', 'refresh', previewId, size);
+        
+        return reply.redirect(request.path);
     }
 };

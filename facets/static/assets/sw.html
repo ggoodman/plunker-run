@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+
+<head>
+    <script>
+        /*global navigator*/
+        if ('serviceWorker' in navigator) {
+            document.domain = 'plunker.co';
+
+            var registration$ = navigator.serviceWorker.register('sw.js', {
+                scope: '/preview/',
+            });
+
+            registration$
+                .then(mapToActiveWorker)
+                .then(onRegistrationSuccess, onRegistrationError);
+        }
+
+
+        function mapToActiveWorker() {
+            return navigator.serviceWorker.ready;
+        }
+
+        function onRegistrationSuccess(sw) {
+            // console.log('onRegistrationSuccess', sw);
+
+            return sw;
+        }
+
+
+        function onRegistrationError(e) {
+            console.warn('Error registering preview ServiceWorker: ', e.message);
+        }
+    </script>
+</head>
+
+<body>Nothing to see here</body>
+
+</html>

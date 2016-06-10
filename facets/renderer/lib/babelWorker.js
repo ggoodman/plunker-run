@@ -13,10 +13,6 @@ require('babel-preset-stage-3');
 
 require('babel-plugin-transform-es2015-modules-systemjs');
 
-const BASE_DIR = Path.resolve(Path.join(__dirname, '../../..'));
-
-process.chdir(BASE_DIR);
-
 module.exports = compile;
 
 
@@ -37,52 +33,6 @@ function compile(previewId, entries, pathname, cb) {
     options.highlightCode = false;
     options.sourceMaps = false;
     
-    // if (options.presets) {
-    //     options.plugins = options.presets.map((val) => {
-    //         if (typeof val === "string") {
-    //             let presetLoc = require.resolve(`babel-preset-${val}`) || require.resolve(val);
-    //             if (presetLoc) {
-    //                 return require(presetLoc);
-    //             }
-    //             else {
-    //                 throw new Error(`Couldn't find preset ${JSON.stringify(val)}`);
-    //             }
-    //         } else if (typeof val === "object") {
-    //             return val;
-    //         } else {
-    //             throw new Error(`Unsupported preset format: ${val}.`);
-    //         }
-    //     });
-    // }
-    
-    // if (options.plugins) {
-    //     options.plugins = options.plugins.map((val) => {
-    //         if (typeof val === "string") {
-    //             let pluginLoc = require.resolve(`babel-plugin-${val}`) || require.resolve(val);
-    //             if (pluginLoc) {
-    //                 return require(pluginLoc);
-    //             }
-    //             else {
-    //                 throw new Error(`Couldn't find plugin ${JSON.stringify(val)}`);
-    //             }
-    //         } else if (typeof val === "object") {
-    //             return val;
-    //         } else {
-    //             throw new Error(`Unsupported plugin format: ${val}.`);
-    //         }
-    //     });
-    // }
-    
-    // const mountPath = `${BASE_DIR}/${previewId}`;
-    // const previewFs = new MemoryFs.Volume();//(_.mapKeys(entries, pathname => Path.join(BASE_DIR, pathname)));
-    // const sourcePath = Path.join(mountPath, pathname);
-    
-    // previewFs.mountSync(mountPath, entries);
-    
-    // UnionFs
-    //     .use(Fs)
-    //     .use(previewFs)
-    //     .replace(Fs);
         
     try {
         const result = Babel.transform(source, options);
@@ -91,18 +41,4 @@ function compile(previewId, entries, pathname, cb) {
     } catch (e) {
         cb(e);
     }
-    // return Babel.transformFile(sourcePath, options, onTransformationComplete);
-    
-    
-    // function onTransformationComplete(err, result) {
-    //     if (err) {
-    //         err.mountPath = mountPath;
-    //         err.sourcePath = sourcePath;
-    //         err.previewFs = previewFs;
-            
-    //         return cb(err);
-    //     }
-        
-    //     return cb(null, result);
-    // }
 }

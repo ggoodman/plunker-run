@@ -18,8 +18,8 @@ function getRenderer(preview, pathname) {
     function render() {
         return {
             encoding: 'utf-8',
+            etag: entry.etag + '-' + exports.name,
             headers: {
-                'ETag': preview.etag,
                 'Content-Type': Mime.lookup(entry.pathname) || 'text/plain',
             },
             payload: entry.content,

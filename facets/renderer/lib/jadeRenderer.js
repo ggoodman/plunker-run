@@ -1,15 +1,14 @@
-'use strict';
-
 const Bluebird = require('bluebird');
-const Less = require('less');
+const Boom = require('boom');
+const Jade = require('jade');
 
 
-const REQUEST_MATCH = /\.css/;
-const SOURCE_EXT = '.less';
+const REQUEST_MATCH = /\.html/;
+const SOURCE_EXT = '.jade';
 
 
 module.exports = {
-    name: 'less',
+    name: 'jade',
     getRenderer,
 };
 
@@ -26,36 +25,36 @@ function getRenderer(preview, pathname) {
     
     
     function render(request) {
-        const code = entry.content.toString('utf8');
         const ifNoneMatch = request.headers['if-none-match'];
         const etagRx = new RegExp(`^"${entry.etag}\-${exports.name}-(gzip|deflate)"`);
+        const code = entry.content.toString('utf8');
         
         if (etagRx.test(ifNoneMatch)) {
             return Bluebird.resolve({
                 encoding: 'utf-8',
                 etag: entry.etag,
                 headers: {
-                    'Content-Type': 'text/css',
+                    'Content-Type': 'text/html',
                 },
                 payload: '',
             });
         }
         
-        return Bluebird.try(() => Less.render(code))
+        return Bluebird.try(() => {
+            const fn = Jade.compile(code, { filename: entry.pathname, compileDebug: true });
+            
+            return fn();
+        })
             .catch(e => {
                 preview.log({
-                    renderer: 'less',
+                    renderer: 'jade',
                     level: 'error',
                     pathname: entry.pathname,
-                    row: e.line,
-                    column: e.column,
                     message: e.message,
-                    context: e.extract.join('\n'),
                 });
                 
-                throw e;
+                throw Boom.wrap(e, 400);
             })
-            .get('css')
             .then(buildReply);
     }
     
@@ -64,8 +63,7 @@ function getRenderer(preview, pathname) {
             encoding: 'utf-8',
             etag: entry.etag + '-' + exports.name,
             headers: {
-                'ETag': preview.etag,
-                'Content-Type': 'text/css',
+                'Content-Type': 'text/html',
             },
             payload,
         };
