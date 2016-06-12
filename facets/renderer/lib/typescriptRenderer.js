@@ -2,15 +2,14 @@
 
 const Bluebird = require('bluebird');
 const Boom = require('boom');
-const Crypto = require('crypto');
 const Fs = require('fs');
-const Path = require('path');
+const Static = require('./staticRenderer');
 const Typescript = require('typescript');
 const _ = require('lodash');
 
 
 const REQUEST_MATCH = /\.js$/;
-const SOURCE_EXT = ['.ts'];
+const SOURCE_EXT = ['.ts', '.tsx'];
 const USE_PROGRAM = false; // If we ever wanted to do multi-file compilation, this is a flag away.
 
 
@@ -23,11 +22,17 @@ module.exports = {
 function getRenderer(preview, pathname) {
     const tsConfigEntry = preview.get('tsconfig.json');
     const definitions = Fs.readFileSync(require.resolve('typescript/lib/lib.d.ts'), 'utf8');
+    const dependencies = [];
     let sourcename;
     let entry = preview.get(pathname);
     
     if (entry && REQUEST_MATCH.test(pathname) && tsConfigEntry) {
         return render;
+    }
+    
+    if (preview.get(pathname)) {
+        // Requested file exists. Don't compile
+        return;
     }
     
     for (const ext of SOURCE_EXT) {
@@ -48,7 +53,9 @@ function getRenderer(preview, pathname) {
         const code = entry.content.toString('utf8');
         
         return new Bluebird((resolve, reject) => {
-            const compilerOptions = Typescript.getDefaultCompilerOptions();
+            const compilerOptions = _.extend({}, Typescript.getDefaultCompilerOptions(), {
+                jsx: Typescript.JsxEmit.React,
+            });
             const compilerHost = {
                 fileExists: (pathname) => {
                     const exists = !!preview.get(pathname.replace(/^\//, ''));
@@ -66,6 +73,8 @@ function getRenderer(preview, pathname) {
                     
                     // console.log('getSourceFile', pathname, v, entry);
                     
+                    dependencies.push(pathname);
+                    
                     if (!entry) throw Boom.notFound();
                     
                     return Typescript.createSourceFile(pathname, entry.content.toString('utf8'), v);
@@ -74,16 +83,8 @@ function getRenderer(preview, pathname) {
                     const pathname = filename.split('/').filter(Boolean).join('/');
                     const encoding = 'utf8';
                     const content = new Buffer(text, encoding);
-                    const etag = Crypto.createHash('md5').update(content).digest('hex');
                     
-                    console.log('writeFile', filename, text);
-                    
-                    preview.entries[pathname] = {
-                        pathname,
-                        content,
-                        encoding,
-                        etag,
-                    };
+                    preview.addDynamicEntry(pathname, { content, encoding }, dependencies);
                 },
                 getDefaultLibFileName: _.constant('/lib.d.ts'),
                 useCaseSensitiveFileNames: _.constant(false),
@@ -127,6 +128,8 @@ function getRenderer(preview, pathname) {
                 const json = Typescript.parseConfigFileTextToJson(tsConfigEntry.pathname, tsConfigEntry.content.toString('utf8'));
                 const parsed = Typescript.parseJsonConfigFileContent(json.config, compilerHost, '/', compilerOptions);
                 
+                dependencies.push('tsconfig.json');
+                
                 _.extend(compilerOptions, parsed.options);
             }
             
@@ -152,7 +155,6 @@ function getRenderer(preview, pathname) {
                 
                 return resolve(compiled.content);
             } else {
-            
                 const result = Typescript.transpileModule(code, {
                     compilerOptions,
                     fileName: `/${sourcename}`,
@@ -190,13 +192,8 @@ function getRenderer(preview, pathname) {
     }
     
     function buildReply(payload) {
-        return {
-            encoding: 'utf-8',
-            etag: Crypto.createHash('md5').update(payload).digest('hex'),
-            headers: {
-                'Content-Type': 'application/javascript',
-            },
-            payload,
-        };
+        const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, dependencies)
+                
+        return Static.renderStatic(dynamicEntry);
     }
 }
