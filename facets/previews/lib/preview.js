@@ -12,23 +12,53 @@ module.exports = Preview;
 
 Util.inherits(Preview, EventEmitter);
 
+
+Preview.createEntry = function (pathname, options) {
+    const encoding = options.encoding || 'utf8';
+    const content = new Buffer(options.content, encoding);
+    const etag = Crypto.createHash('md5').update(content, encoding).digest('hex');
+    
+    return {
+        pathname,
+        content,
+        encoding,
+        etag,
+    };
+};
+
 Preview.fromEntries = function (id, entries) {
     return new Preview(id, entries);
 };
 
+
 function Preview(id, entries) {
     EventEmitter.call(this);
     
-    this.etag = new Date().toISOString();
+    this.etag = Date.now();
     this.id = id;
     this.entries = {};
     this.logQueue = [];
     this.intervals = [];
+    this.dynamicEntries = {};
     
-    this.update(entries);
+    _.forEach(entries, (options, pathname) => this.addEntry(pathname, options));
     
     this.on('data', data => this.logQueue.push(data));
 }
+
+Preview.prototype.addDynamicEntry = function (pathname, options, dependencies) {
+    this.dynamicEntries[pathname] = dependencies.slice();
+    
+    return this.addEntry(pathname, options);
+};
+
+Preview.prototype.addEntry = function (pathname, options) {
+    const entry = Preview.createEntry(pathname, options);
+    
+    this.entries[pathname] = entry;
+    
+    return entry;
+};
 
 Preview.prototype.destroy = function () {
     this.intervals.forEach(clearInterval);
@@ -80,14 +110,39 @@ Preview.prototype.log = function (data) {
 };
 
 Preview.prototype.update = function (entries) {
-    this.entries = _.mapValues(entries, (entry, pathname) => ({
-        pathname,
-        content: new Buffer(entry.content, entry.encoding || 'utf8'),
-        encoding: entry.encoding || 'utf8',
-        etag: Crypto.createHash('md5').update(entry.content, entry.encoding || 'utf8').digest('hex'),
-    }));
+    const oldEntries = _.clone(this.entries);
+    const oldDynamicEntries = _.clone(this.dynamicEntries);
     
     this.logQueue.length = 0;
+    this.etag = Date.now();
+    this.dynamicEntries = {};
+    this.entries = _.mapValues(entries, (entry, pathname) => this.addEntry(pathname, entry));
+    
+    // Check if any of the dynamicEntries can be migrated
+    _.forEach(oldDynamicEntries, (dependencies, pathname) => {
+        const dynamicEntry = oldEntries[pathname];
+        let canMigrate = dependencies.length > 0;
+        
+        for (let i = 0; i < dependencies.length; i++) {
+            const dependencyPathname = dependencies[i];
+            const oldDependencyEntry = oldEntries[dependencyPathname];
+            const newDependencyEntry = this.entries[dependencyPathname];
+            
+            if (!oldDependencyEntry || !newDependencyEntry) {
+                canMigrate = false;
+                break;
+            }
+            
+            if (oldDependencyEntry.content.compare(newDependencyEntry.content)) {
+                canMigrate = false;
+                break;
+            }
+        }
+        
+        if (canMigrate) {
+            this.addDynamicEntry(pathname, dynamicEntry, dependencies);
+        }
+    });
     
     return this;
 };
