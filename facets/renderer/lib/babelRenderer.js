@@ -3,6 +3,7 @@
 const Bluebird = require('bluebird');
 const Boom = require('boom');
 const Farm = require('worker-farm');
+const Static = require('./staticRenderer');
 const _ = require('lodash');
 
 const compile = Farm({
@@ -31,6 +32,11 @@ function getRenderer(preview, pathname) {
     
     if (entry && REQUEST_MATCH.test(pathname) && babelRc) {
         return render;
+    }
+    
+    if (preview.get(pathname)) {
+        // Requested file exists. Don't compile
+        return;
     }
     
     for (const ext of SOURCE_EXT) {
@@ -71,7 +77,7 @@ function getRenderer(preview, pathname) {
             , {});
             // const compile = require('./babelWorker');
             
-            compile(preview.id, entries, entry.pathname, onWorkerResponse);
+            compile(preview.id, entries, pathname, entry.pathname, onWorkerResponse);
             
             
             function onWorkerResponse(err, result) {
@@ -91,14 +97,11 @@ function getRenderer(preview, pathname) {
                     return reject(Boom.wrap(err, 400));
                 }
                 
-                return resolve({
-                    encoding: 'utf-8',
-                    etag: entry.etag + '-' + exports.name,
-                    headers: {
-                        'Content-Type': 'text/javascript',
-                    },
-                    payload: result.code,
-                });
+                _.forEach(result.logs, log => preview.log(log));
+                
+                const dynamicEntry = preview.addDynamicEntry(pathname, result.entry, result.dependencies);
+                
+                return resolve(Static.renderStatic(dynamicEntry));
             }
         });
     }

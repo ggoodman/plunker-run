@@ -17,16 +17,31 @@ module.exports = compile;
 
 console.log('Started babel worker');
 
-function compile(previewId, entries, pathname, cb) {
+function compile(previewId, entries, pathname, sourcename, cb) {
     const babelRc = entries['.babelrc'];
-    const source = entries[pathname];
+    const source = entries[sourcename];
+    const response = {
+        dependencies: [ sourcename ],
+        logs: [],
+    };
     let options = {};
+    
+    if (Path.extname(sourcename) === '.jsx') {
+        options.presets = ['es2015', 'react'];
+    }
     
     if (babelRc) {
         try {
             options = JSON.parse(babelRc);
-        } catch (e) {
             
+            response.dependencies.push('.babelrc');
+        } catch (e) {
+            response.logs.push({
+                renderer: 'babel',
+                level: 'warning',
+                pathname: '.babelrc',
+                message: e.message,
+            });
         }
     }
     
@@ -38,8 +53,14 @@ function compile(previewId, entries, pathname, cb) {
     try {
         const result = Babel.transform(source, options);
         
-        cb(null, result);
-    } catch (e) {
-        cb(e);
+        response.entry = {
+            pathname,
+            content: result.code,
+            encoding: 'utf8',
+        };
+        
+        cb(null, response);
+    } catch (err) {
+        cb(err);
     }
 }
