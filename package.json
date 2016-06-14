@@ -36,6 +36,7 @@
     "boom": "^3.2.1",
     "coffee-script": "^1.10.0",
     "ejs": "^2.4.1",
+    "github-markdown-css": "^2.3.0",
     "good": "^7.0.1",
     "good-console": "^6.1.2",
     "good-squeeze": "^3.0.1",

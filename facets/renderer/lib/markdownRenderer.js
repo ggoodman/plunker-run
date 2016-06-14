@@ -1,30 +1,16 @@
 'use strict';
 
 const Bluebird = require('bluebird');
+const Fs = require('fs');
 const Highlight = require('highlight.js');
 const Markdown = require('markdown-it');
-
-const md = Markdown({
-    highlight: function(str, lang) {
-        if (lang && Highlight.getLanguage(lang)) {
-            try {
-                return Highlight.highlight(lang, str).value;
-            }
-            catch (__) {}
-        }
-
-        try {
-            return Highlight.highlightAuto(str).value;
-        }
-        catch (__) {}
-
-        return ''; // use external default escaping
-    }
-});
+const Static = require('./staticRenderer');
 
 
 const REQUEST_MATCH = /\.html$/;
 const SOURCE_EXT = ['.md', '.markdown'];
+const HIGHLIGHT_CSS = Fs.readFileSync(require.resolve('highlight.js/styles/github.css'), 'utf8');
+const MARKDOWN_CSS = Fs.readFileSync(require.resolve('github-markdown-css/github-markdown.css'), 'utf8');
 
 
 module.exports = {
@@ -35,6 +21,52 @@ module.exports = {
 
 function getRenderer(preview, pathname) {
     let entry;
+    let css = MARKDOWN_CSS;
+    
+    const md = Markdown({
+        highlight: function(str, lang) {
+            if (lang && Highlight.getLanguage(lang)) {
+                try {
+                    const html = Highlight.highlight(lang, str).value;
+                    
+                    css += '\n' + HIGHLIGHT_CSS;
+                    
+                    return html;
+                }
+                catch (e) {
+                    preview.log({
+                        renderer: 'markdown',
+                        level: 'warn',
+                        pathname: entry.pathname,
+                        message: `Highlight failed: ${e.message}`,
+                    });
+                }
+            }
+    
+            try {
+                const html = Highlight.highlightAuto(str).value;
+                    
+                css = '\n' + HIGHLIGHT_CSS;
+                
+                return html;
+            }
+            catch (e) {
+                preview.log({
+                    renderer: 'markdown',
+                    level: 'warn',
+                    pathname: entry.pathname,
+                    message: `Highlight failed: ${e.message}`,
+                });
+            }
+    
+            return ''; // use external default escaping
+        }
+    });
+    
+    if (preview.get(pathname)) {
+        // Requested file exists. Don't compile
+        return;
+    }
     
     for (const ext of SOURCE_EXT) {
         const sourcename = pathname.replace(REQUEST_MATCH, ext);
@@ -48,20 +80,6 @@ function getRenderer(preview, pathname) {
 
 
     function render(request) {
-        const ifNoneMatch = request.headers['if-none-match'];
-        const etagRx = new RegExp(`^"${entry.etag}\-${exports.name}-(gzip|deflate)"`);
-        
-        if (etagRx.test(ifNoneMatch)) {
-            return Bluebird.resolve({
-                encoding: 'utf-8',
-                etag: entry.etag,
-                headers: {
-                    'Content-Type': 'text/css',
-                },
-                payload: '',
-            });
-        }
-        
         return Bluebird.resolve(md.render(entry.content.toString('utf8')))
             .then(wrapBody)
             .then(buildReply);
@@ -72,7 +90,9 @@ function getRenderer(preview, pathname) {
             <!doctype html>
             <html>
                 <head>
-                    <link rel="stylesheet" href="https://cdn.rawgit.com/sindresorhus/github-markdown-css/v2.2.1/github-markdown.css">
+                    <style type="text/css">
+                        ${css}
+                    </style>
                 </head>
                 <body class="markdown-body">
                     ${body}
@@ -82,14 +102,8 @@ function getRenderer(preview, pathname) {
     }
 
     function buildReply(payload) {
-        return {
-            encoding: 'utf-8',
-            etag: entry.etag + '-' + exports.name,
-            headers: {
-                'ETag': preview.etag,
-                'Content-Type': 'text/html',
-            },
-            payload,
-        };
+        const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, [entry.pathname]);
+                
+        return Static.renderStatic(dynamicEntry);
     }
 }

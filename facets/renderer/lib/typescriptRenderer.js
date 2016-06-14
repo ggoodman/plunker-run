@@ -192,7 +192,7 @@ function getRenderer(preview, pathname) {
     }
     
     function buildReply(payload) {
-        const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, dependencies)
+        const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, dependencies);
                 
         return Static.renderStatic(dynamicEntry);
     }
