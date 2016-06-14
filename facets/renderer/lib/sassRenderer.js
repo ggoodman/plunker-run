@@ -2,14 +2,22 @@
 
 const Bluebird = require('bluebird');
 const Boom = require('boom');
-const Crypto = require('crypto');
+const Cache = require('async-cache');
 const Path = require('path');
 const Sass = require('node-sass');
+const Static = require('./staticRenderer');
 const Wreck = require('wreck');
+const _ = require('lodash');
 
 
 const REQUEST_MATCH = /\.css$/;
 const SOURCE_EXT = ['.sass', '.scss'];
+
+const REMOTE_STYLES = new Cache({
+    max: 10,
+    maxAge: 1000 * 60,
+    load: loadRemote,
+});
 
 
 module.exports = {
@@ -38,19 +46,7 @@ function getRenderer(preview, pathname) {
     
     function render(request) {
         const code = entry.content.toString('utf8');
-        // const ifNoneMatch = request.headers['if-none-match'];
-        // const etagRx = new RegExp(`^"${entry.etag}\-${exports.name}-(gzip|deflate)"`);
-        
-        // if (etagRx.test(ifNoneMatch)) {
-        //     return Bluebird.resolve({
-        //         encoding: 'utf-8',
-        //         etag: entry.etag + '-' + exports.name,
-        //         headers: {
-        //             'Content-Type': 'text/css',
-        //         },
-        //         payload: '',
-        //     });
-        // }
+        const dependencies = [entry.pathname];
         
         return new Bluebird((resolve, reject) => {
             return Sass.render({
@@ -68,31 +64,25 @@ function getRenderer(preview, pathname) {
             
             
             function importer(url, prev, done) {
-                console.log('importer', url, prev);
                 const isUrl = url.match(/^https?:\/\//);
                 
                 if (isUrl) {
-                    return Wreck.get(url, { redirects: 3 }, (err, res, body) => {
-                        if (err) return done(err);
-                        if (res.statusCode >= 400) {
-                            return done(Boom.create(res.statusCode));
-                        }
-                        
-                        const file = url;
-                        const contents = body.toString('utf8');
-                        
-                        return done({ file, contents });
-                    });
+                    return REMOTE_STYLES.get(url, (err, result) => done(err || result));
                 }
                 
                 const importPathname = Path.resolve(Path.dirname(prev), url);
                 const imported = preview.get(importPathname.split('/').filter(Boolean).join('/'));
                 
+                if (!imported && url.match(/^node_modules\//)) {
+                    return REMOTE_STYLES.get(_.get(request.server.app.config, 'run.uri', 'https://run.plnkr.co') + '/preview/' + request.params.previewId + '/' + url, (err, result) => done(err || result));
+                }
+                
                 if (!imported) {
                     return done(Boom.notFound(`Import failed for '${importPathname}': Not found`));
                 }
                 
-                        
+                dependencies.push(importPathname);
+                
                 const file = importPathname;
                 const contents = imported.content.toString('utf8');
                 
@@ -115,16 +105,26 @@ function getRenderer(preview, pathname) {
                 throw Boom.wrap(e, 400);
             })
             .then(buildReply);
+        
+        
+        function buildReply(payload) {
+            const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, dependencies);
+                    
+            return Static.renderStatic(dynamicEntry);
+        }
     }
-    
-    function buildReply(payload) {
-        return {
-            encoding: 'utf-8',
-            etag: Crypto.createHash('md5').update(payload).digest('hex'),
-            headers: {
-                'Content-Type': 'text/css',
-            },
-            payload,
-        };
-    }
+}
+
+function loadRemote(url, cb) {
+    return Wreck.get(url, { redirects: 3 }, (err, res, body) => {
+        if (err) return cb(err);
+        if (res.statusCode >= 400) {
+            return cb(Boom.create(res.statusCode));
+        }
+        
+        const file = url;
+        const contents = body.toString('utf8');
+        
+        return cb(null, { file, contents });
+    });
 }

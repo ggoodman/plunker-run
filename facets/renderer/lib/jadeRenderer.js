@@ -1,6 +1,7 @@
 const Bluebird = require('bluebird');
 const Boom = require('boom');
 const Jade = require('jade');
+const Static = require('./staticRenderer');
 
 
 const REQUEST_MATCH = /\.html$/;
@@ -25,20 +26,7 @@ function getRenderer(preview, pathname) {
     
     
     function render(request) {
-        const ifNoneMatch = request.headers['if-none-match'];
-        const etagRx = new RegExp(`^"${entry.etag}\-${exports.name}-(gzip|deflate)"`);
         const code = entry.content.toString('utf8');
-        
-        if (etagRx.test(ifNoneMatch)) {
-            return Bluebird.resolve({
-                encoding: 'utf-8',
-                etag: entry.etag,
-                headers: {
-                    'Content-Type': 'text/html',
-                },
-                payload: '',
-            });
-        }
         
         return Bluebird.try(() => {
             const fn = Jade.compile(code, { filename: entry.pathname, compileDebug: true });
@@ -59,13 +47,8 @@ function getRenderer(preview, pathname) {
     }
     
     function buildReply(payload) {
-        return {
-            encoding: 'utf-8',
-            etag: entry.etag + '-' + exports.name,
-            headers: {
-                'Content-Type': 'text/html',
-            },
-            payload,
-        };
+        const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, [entry.pathname]);
+                
+        return Static.renderStatic(dynamicEntry);
     }
 }

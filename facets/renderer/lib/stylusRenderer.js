@@ -1,5 +1,6 @@
 const Bluebird = require('bluebird');
 const Boom = require('boom');
+const Static = require('./staticRenderer');
 const Stylus = require('stylus');
 
 
@@ -65,13 +66,8 @@ function getRenderer(preview, pathname) {
     }
     
     function buildReply(payload) {
-        return {
-            encoding: 'utf-8',
-            etag: entry.etag + '-' + exports.name,
-            headers: {
-                'Content-Type': 'text/css',
-            },
-            payload,
-        };
+        const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, [entry.pathname]);
+                
+        return Static.renderStatic(dynamicEntry);
     }
 }

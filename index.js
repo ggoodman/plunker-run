@@ -5,6 +5,8 @@ const Package = require('./package.json');
 exports.register = function(server, options, next) {
     server.log(['info', 'init'], `Registering: ${Package.name}`);
     
+    server.app.config = options.config;
+    
     server.bind({
         config: options.config,
         server: server

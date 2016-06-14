@@ -3,7 +3,7 @@
 const _ = require('lodash');
 
 
-const npmRx = /^node_modules\/((?:@[^\/]+\/)?[^\/]+)\/(.*)$/;
+const npmRx = /^node_modules\/((?:@[^\/]+\/)?[^\/]+)(?:\/(.*))?$/;
 
 module.exports = {
     name: 'npmcdn',
@@ -22,7 +22,7 @@ function getRenderer(preview, pathname) {
     function render(request) {
         const packageJson = preview.get('package.json');
         const dependencies = packageJson
-            ?   parseJson(packageJson.content.toString('utf8'))
+            ?   parseJson(packageJson)
             :   {};
         const path = getRequestPath(matches[1], matches[2], dependencies);
         const uri = `https://npmcdn.com/${path}`;
@@ -37,12 +37,19 @@ function getRenderer(preview, pathname) {
         };
     }
     
-    function parseJson(content) {
+    function parseJson(entry) {
         try {
-            const json = JSON.parse(content);
+            const json = JSON.parse(entry.content.toString('utf8'));
             
             return _.defaults({}, json.dependencies, json.devDepenencies);
         } catch (e) {
+            preview.log({
+                renderer: exports.name,
+                level: 'warn',
+                pathname: entry.pathname,
+                message: e.message,
+            });
+            
             return {};
         }
     }
@@ -50,6 +57,6 @@ function getRenderer(preview, pathname) {
     function getRequestPath(module, pathname, dependencies) {
         const spec = dependencies[module];
         
-        return `${module}${spec ? `@${spec}` : ''}/${pathname}`;
+        return module + (spec ? `@${spec}` : '') + (pathname ? `/${pathname}` : '');
     }
 }

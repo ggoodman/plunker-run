@@ -2,6 +2,7 @@
 
 const Bluebird = require('bluebird');
 const Less = require('less');
+const Static = require('./staticRenderer');
 
 
 const REQUEST_MATCH = /\.css$/;
@@ -27,19 +28,6 @@ function getRenderer(preview, pathname) {
     
     function render(request) {
         const code = entry.content.toString('utf8');
-        const ifNoneMatch = request.headers['if-none-match'];
-        const etagRx = new RegExp(`^"${entry.etag}\-${exports.name}-(gzip|deflate)"`);
-        
-        if (etagRx.test(ifNoneMatch)) {
-            return Bluebird.resolve({
-                encoding: 'utf-8',
-                etag: entry.etag,
-                headers: {
-                    'Content-Type': 'text/css',
-                },
-                payload: '',
-            });
-        }
         
         return Bluebird.try(() => Less.render(code))
             .catch(e => {
@@ -60,14 +48,8 @@ function getRenderer(preview, pathname) {
     }
     
     function buildReply(payload) {
-        return {
-            encoding: 'utf-8',
-            etag: entry.etag + '-' + exports.name,
-            headers: {
-                'ETag': preview.etag,
-                'Content-Type': 'text/css',
-            },
-            payload,
-        };
+        const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, [entry.pathname]);
+                
+        return Static.renderStatic(dynamicEntry);
     }
 }
