@@ -101,7 +101,7 @@ function getRenderer(preview, pathname) {
                 
                 const dynamicEntry = preview.addDynamicEntry(pathname, result.entry, result.dependencies);
                 
-                return resolve(request, Static.renderStatic(dynamicEntry));
+                return resolve(Static.renderStatic(request, dynamicEntry));
             }
         });
     }

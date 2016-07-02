@@ -95,6 +95,7 @@
                     var update = data[data.type];
                     var form = document.createElement('form');
                     var input = document.createElement('input');
+                    var iframe = document.getElementById('preview');
                     
                     for (var pathname in update.entries) {
                         var entry = update.entries[pathname];
@@ -118,6 +119,14 @@
                     form.target = 'preview';
                     
                     document.body.appendChild(form);
+                    
+                    iframe.onload = function() {
+                        if (onReady) {
+                            onReady();
+                            
+                            onReady = null;
+                        }
+                    }
                     
                     form.submit();
                     
