@@ -45,11 +45,12 @@ function getRenderer(preview, pathname) {
             })
             .get('css')
             .then(buildReply);
-    }
-    
-    function buildReply(payload) {
-        const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, [entry.pathname]);
-                
-        return Static.renderStatic(dynamicEntry);
+        
+        
+        function buildReply(payload) {
+            const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, [entry.pathname]);
+                    
+            return Static.renderStatic(request, dynamicEntry);
+        }
     }
 }

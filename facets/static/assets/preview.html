@@ -25,6 +25,8 @@
         }
     </style>
     <script>
+        var onReady;
+        
         window.parent.postMessage({
             type: 'ready',
         }, '*');
@@ -33,7 +35,9 @@
         
         
         function onPostMessage(event) {
-            if (event.source !== window.parent) {
+            var iframe = document.getElementById('preview');
+            
+            if (event.source !== window.parent && (!iframe || event.source !== iframe.contentWindow)) {
                 return console.warn('Preview proxy received message from unknown source with url: %s', event.origin);
             }
             
@@ -44,12 +48,24 @@
             }
             
             switch (data.type) {
+                case 'console': {
+                    return window.parent.postMessage(data, '*');
+                }
+                case 'ready': {
+                    if (onReady) {
+                        onReady();
+                        
+                        onReady = null;
+                    }
+                    
+                    return;
+                }
                 case 'request': {
                     if (!event.ports[0]) {
                         return console.warn('Preview proxy received a request without an attached MessagePort');
                     }
                     
-                    return handleRequest(data[data.type], function (err, data) {
+                    onReady = function (err, data) {
                         if (err) {
                             data.port.postMessage({
                                 type: 'error',
@@ -65,19 +81,20 @@
                         });
                         
                         return event.ports[0].close();
-                    });
+                    };
+                    
+                    return handleRequest(data[data.type]);
                 }
                 default: return console.warn('Preview proxy unable to handle messages with type %s', data.type);
             }
         }
         
-        function handleRequest(data, cb) {
+        function handleRequest(data) {
             switch (data.type) {
                 case 'update': {
                     var update = data[data.type];
                     var form = document.createElement('form');
                     var input = document.createElement('input');
-                    var iframe = document.getElementById('preview');
                     
                     for (var pathname in update.entries) {
                         var entry = update.entries[pathname];
@@ -101,12 +118,6 @@
                     form.target = 'preview';
                     
                     document.body.appendChild(form);
-                    
-                    iframe.onload = function (e) {
-                        cb(null);
-                        
-                        iframe.onload = null;
-                    };
                     
                     form.submit();
                     

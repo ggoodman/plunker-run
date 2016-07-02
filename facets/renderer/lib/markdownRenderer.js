@@ -83,6 +83,13 @@ function getRenderer(preview, pathname) {
         return Bluebird.resolve(md.render(entry.content.toString('utf8')))
             .then(wrapBody)
             .then(buildReply);
+    
+    
+        function buildReply(payload) {
+            const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, [entry.pathname]);
+                    
+            return Static.renderStatic(request, dynamicEntry);
+        }
     }
     
     function wrapBody(body) {
@@ -99,11 +106,5 @@ function getRenderer(preview, pathname) {
                 </body>
             </html>
         `.trim();
-    }
-
-    function buildReply(payload) {
-        const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, [entry.pathname]);
-                
-        return Static.renderStatic(dynamicEntry);
     }
 }

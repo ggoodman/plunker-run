@@ -189,11 +189,12 @@ function getRenderer(preview, pathname) {
                 throw Boom.wrap(e, 400);
             })
             .then(buildReply);
-    }
-    
-    function buildReply(payload) {
-        const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, dependencies);
-                
-        return Static.renderStatic(dynamicEntry);
+        
+        
+        function buildReply(payload) {
+            const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, dependencies);
+                    
+            return Static.renderStatic(request, dynamicEntry);
+        }
     }
 }
