@@ -2,6 +2,9 @@
 
 const Babel = require('babel-core');
 const Path = require('path');
+const Tripwire = require('tripwire');
+
+const TRIPWIRE_TIMEOUT = 2000;
 
 // Pre-load presets.
 require('babel-preset-es2015');
@@ -16,6 +19,10 @@ require('babel-plugin-transform-es2015-modules-systemjs');
 module.exports = compile;
 
 console.log('Started babel worker');
+
+
+startTripwire();
+
 
 function compile(previewId, entries, pathname, sourcename, cb) {
     const babelRc = entries['.babelrc'];
@@ -63,4 +70,14 @@ function compile(previewId, entries, pathname, sourcename, cb) {
     } catch (err) {
         cb(err);
     }
+}
+
+function startTripwire() {
+    process.on('uncaughtException', e => {
+        console.error(e.message || e);
+    });
+    
+    Tripwire.resetTripwire(TRIPWIRE_TIMEOUT);
+    
+    setInterval(() => Tripwire.resetTripwire(TRIPWIRE_TIMEOUT), TRIPWIRE_TIMEOUT / 2);
 }

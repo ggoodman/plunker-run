@@ -55,6 +55,7 @@
     "mime-types": "^2.1.10",
     "node-sass": "^3.7.0",
     "stylus": "^0.54.5",
+    "tripwire": "^4.1.0",
     "typescript": "^1.8.10",
     "vision": "^4.1.0",
     "worker-farm": "solidusjs/node-worker-farm#364fb0af2e5fad0c836246c167e0c28417b9cd04",
