@@ -5,8 +5,8 @@ const Boom = require('boom');
 const Static = require('./staticRenderer');
 
 
-const REQUEST_MATCH = /\.base64(\..+)$/;
-const SOURCE_EXT = '$1';
+const REQUEST_MATCH = /(\..+)$/;
+const SOURCE_EXT = '.base64$1';
 
 
 module.exports = {
@@ -27,8 +27,8 @@ function getRenderer(preview, pathname) {
     
     
     function render(request) {
-        const content = new Buffer(entry.content, 'base64');
-        const dynamicEntry = preview.addDynamicEntry(pathname, { content }, [ entry.pathname ]);
+        const content = new Buffer(entry.content.toString('utf-8'), 'base64');
+        const dynamicEntry = preview.addDynamicEntry(pathname, { content, encoding: 'binary' }, [ entry.pathname ]);
 
         return Static.renderStatic(request, dynamicEntry);
     }

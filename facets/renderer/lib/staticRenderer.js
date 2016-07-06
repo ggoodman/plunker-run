@@ -77,8 +77,8 @@ function renderStatic(request, entry) {
         :   entry.content;
     
     return {
-        encoding: 'utf-8',
-        etag: entry.etag + '-' + exports.name,
+        encoding: entry.encoding,
+        etag: entry.etag + '-' + module.exports.name,
         headers: {
             'Content-Type': contentType,
         },
