@@ -1,6 +1,6 @@
 {
   "name": "plunker-run",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "Plunker.NEXT preview server",
   "main": "server.js",
   "engines": {
