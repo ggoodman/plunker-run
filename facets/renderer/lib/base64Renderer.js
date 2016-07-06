@@ -6,7 +6,7 @@ const Static = require('./staticRenderer');
 
 
 const REQUEST_MATCH = /\.base64(\..+)$/;
-const SOURCE_EXT = '';
+const SOURCE_EXT = '$1';
 
 
 module.exports = {
