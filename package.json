@@ -8,6 +8,8 @@
     "npm": "2.x"
   },
   "scripts": {
+    "docker:build": "docker build -t gcr.io/$(gcloud config list project --format 'value(core.project)' 2> /dev/null)/plunker-run:$(node -e 'console.log(require(\"./package.json\").version)') .",
+    "docker:push": "gcloud docker push gcr.io/$(gcloud config list project --format 'value(core.project)' 2> /dev/null)/plunker-run:$(node -e 'console.log(require(\"./package.json\").version)')",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,14 +27,14 @@
   "homepage": "https://github.com/ggoodman/plunker-run#readme",
   "dependencies": {
     "async-cache": "^1.1.0",
-    "babel-core": "^6.7.6",
-    "babel-plugin-transform-es2015-modules-systemjs": "^6.6.5",
-    "babel-preset-es2015": "^6.6.0",
-    "babel-preset-react": "^6.5.0",
+    "babel-core": "^6.10.4",
+    "babel-plugin-transform-es2015-modules-systemjs": "^6.9.0",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-react": "^6.11.1",
     "babel-preset-stage-0": "^6.5.0",
     "babel-preset-stage-1": "^6.5.0",
-    "babel-preset-stage-2": "^6.5.0",
-    "babel-preset-stage-3": "^6.5.0",
+    "babel-preset-stage-2": "^6.11.0",
+    "babel-preset-stage-3": "^6.11.0",
     "bluebird": "^3.3.4",
     "boom": "^3.2.1",
     "coffee-script": "^1.10.0",
