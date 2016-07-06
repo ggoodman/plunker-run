@@ -9,6 +9,7 @@ module.exports = render;
 const renderers = [
     require('../lib/babelRenderer'),
     require('../lib/typescriptRenderer'),
+    require('../lib/base64Renderer'),
     require('../lib/staticRenderer'),
     require('../lib/npmcdnRenderer'),
     require('../lib/lessRenderer'),
