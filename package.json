@@ -8,8 +8,8 @@
     "npm": "2.x"
   },
   "scripts": {
-    "docker:build": "docker build -t gcr.io/$(gcloud config list project --format 'value(core.project)' 2> /dev/null)/plunker-run:$(node -e 'console.log(require(\"./package.json\").version)') .",
-    "docker:push": "gcloud docker push gcr.io/$(gcloud config list project --format 'value(core.project)' 2> /dev/null)/plunker-run:$(node -e 'console.log(require(\"./package.json\").version)')",
+    "docker:build": "docker build -t gcr.io/$(gcloud config list project --format 'value(core.project)' 2> /dev/null)/$(node -e 'var p=require(\"./package.json\");console.log(`${p.name}:${p.version}`)') .",
+    "docker:push": "gcloud docker push gcr.io/$(gcloud config list project --format 'value(core.project)' 2> /dev/null)/$(node -e 'var p=require(\"./package.json\");console.log(`${p.name}:${p.version}`)')",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
