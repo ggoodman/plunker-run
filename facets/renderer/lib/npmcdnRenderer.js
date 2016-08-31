@@ -6,7 +6,7 @@ const _ = require('lodash');
 const npmRx = /^node_modules\/((?:@[^\/]+\/)?[^\/]+)(?:\/(.*))?$/;
 
 module.exports = {
-    name: 'npmcdn',
+    name: 'unpkg',
     getRenderer,
 };
 
@@ -25,7 +25,7 @@ function getRenderer(preview, pathname) {
             ?   parseJson(packageJson)
             :   {};
         const path = getRequestPath(matches[1], matches[2], dependencies);
-        const uri = `https://npmcdn.com/${path}`;
+        const uri = `https://unpkg.com/${path}`;
         
         return {
             headers: {
