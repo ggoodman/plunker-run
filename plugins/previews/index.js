@@ -74,7 +74,7 @@ exports.register = function(server, options, next) {
         path: 'views',
     });
     
-    server.log(['info', 'init'], 'Started ' + exports.register.attributes.name + '.');
+    server.log(['info', 'init'], `Started ${exports.register.attributes.name}@${exports.register.attributes.version}.`);
 
     next();
 };

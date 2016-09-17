@@ -11,8 +11,6 @@ exports.register = function(server, options, next) {
     server.dependency([
         'inert',
     ], register);
-    
-    server.log(['info', 'init'], `Started ${exports.register.attributes.name}@${exports.register.attributes.version}.`);
 
     next();
 };
@@ -58,7 +56,7 @@ function register(server, next) {
         config: require('./routes/handleStatic')('preview.html')
     });
     
-    server.log(['info', 'init'], 'Started ' + exports.register.attributes.name + '.');
+    server.log(['info', 'init'], `Started ${exports.register.attributes.name}@${exports.register.attributes.version}.`);
 
     next();
 }

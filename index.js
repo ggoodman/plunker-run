@@ -46,19 +46,23 @@ exports.register = function(server, options, next) {
             },
         },
         {
-            register: require('./facets/cache'),
+            register: require('./plugins/cache'),
             options: options,
         },
         {
-            register: require('./facets/renderer'),
+            register: require('./plugins/renderer'),
             options: options,
         },
         {
-            register: require('./facets/previews'),
+            register: require('./plugins/mongo'),
             options: options,
         },
         {
-            register: require('./facets/static'),
+            register: require('./plugins/previews'),
+            options: options,
+        },
+        {
+            register: require('./plugins/static'),
             options: options,
         },
     ], err => {

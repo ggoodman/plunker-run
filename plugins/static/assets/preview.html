@@ -97,6 +97,8 @@
                     var input = document.createElement('input');
                     var iframe = document.getElementById('preview');
                     
+                    iframe.name = 'preview';
+                    
                     for (var pathname in update.entries) {
                         var entry = update.entries[pathname];
                         
