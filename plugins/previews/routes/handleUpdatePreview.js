@@ -21,21 +21,21 @@ module.exports = {
 
         if (cached) {
             cached.update(request.payload.files);
-            
+
             return saveAndReply(cached);
         } else {
             const preview = request.server.methods.previews.fromEntries(request.params.previewId, request.payload.files);
 
             return saveAndReply(preview);
         }
-        
-        
+
+
         function saveAndReply(preview) {
             return request.server.methods.cache.put(preview, (error) => {
                 if (error) {
                     return reply(error);
                 }
-                
+
                 return reply.redirect(request.path);
             });
         }

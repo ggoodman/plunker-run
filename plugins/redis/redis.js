@@ -28,13 +28,22 @@ function register(server, options, next) {
         retry_strategy: retryStrategy,
     }));
 
+    client.on('error', onError);
     client.once('ready', onReady);
 
-    const connTimeout = setTimeout(onTimeout, 20 * 1000);
-    
+    const connTimeout = setTimeout(onTimeout, 60 * 1000);
+
     // TODO: Cleanly exit redis on server restart
 
 
+    function onError(error) {
+        server.log(['error', 'redis'], {
+            error: error.message,
+            error_code: error.code,
+            message: 'Redis error',
+        });
+    }
+    
     function onTimeout() {
         client.removeListener('ready', onReady);
         client.quit();
