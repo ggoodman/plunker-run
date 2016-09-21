@@ -54,11 +54,11 @@ exports.register = function(server, options, next) {
             options: options,
         },
         {
-            register: require('./plugins/mongo'),
+            register: require('./plugins/previews'),
             options: options,
         },
         {
-            register: require('./plugins/previews'),
+            register: require('./plugins/redis'),
             options: options,
         },
         {

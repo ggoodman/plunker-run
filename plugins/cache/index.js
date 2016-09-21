@@ -10,29 +10,23 @@ exports.register = function(server, options, next) {
         config: options.config,
         server: server
     });
-    
-    server.expose('lru', new LRUCache({
-        dispose: (previewId, preview) => preview.destroy(),
-        max: 100,
-        maxAge: 1000 * 60 * 5,
-    }));
-    
+
     server.method({
         name: 'cache.get',
         method: require('./methods/get'),
         options: {
-            callback: false,
+            callback: true,
         },
     });
-    
+
     server.method({
         name: 'cache.put',
         method: require('./methods/put'),
         options: {
-            callback: false,
+            callback: true,
         },
     });
-    
+
     server.log(['info', 'init'], `Started ${exports.register.attributes.name}@${exports.register.attributes.version}.`);
 
     next();
@@ -43,5 +37,6 @@ exports.register.attributes = {
     name: 'cache',
     version: '1.0.0',
     dependencies: [
+        'redis',
     ]
 };
