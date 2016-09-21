@@ -11,7 +11,7 @@ RUN apk add --no-cache git make gcc g++ python && \
         /root/.npm /root/.node-gyp /root/.gnupg
 
 COPY *.js ./
-COPY facets ./facets
+COPY plugins ./plugins
 
 EXPOSE 8080
 ENV PORT 8080
