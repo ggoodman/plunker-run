@@ -1,18 +1,8 @@
-const Errors = require('@google/cloud-errors');
 const Package = require('./package.json');
 
 
 exports.register = function(server, options, next) {
     server.log(['info', 'init'], `Registering: ${Package.name}`);
-
-    const errors = Errors({
-        projectId: process.env.GCLOUD_PROJECT,
-        logLevel: 0, // defaults to logging warnings (2). Available levels: 0-5
-        serviceContext: {
-            service: Package.name,
-            version: Package.version,
-        },
-    });
 
     server.app.config = options.config;
 
@@ -22,9 +12,6 @@ exports.register = function(server, options, next) {
     });
 
     server.register([
-        {
-            register: errors.hapi,
-        },
         {
             register: require('hapi-qs'),
             options: {
@@ -39,24 +26,24 @@ exports.register = function(server, options, next) {
         {
             register: require('vision'),
         },
-        {
-            register: require('good'),
-            options: {
-                ops: {
-                    interval: 1000
-                },
-                reporters: {
-                    console: [{
-                        module: 'good-squeeze',
-                        name: 'Squeeze',
-                        args: [{ error: '*', log: '*', response: '*' }]
-                    }, {
-                        module: 'good-console',
-                        args: [{ color: false }],
-                    }, 'stdout'],
-                },
-            },
-        },
+        // {
+        //     register: require('good'),
+        //     options: {
+        //         ops: {
+        //             interval: 1000
+        //         },
+        //         reporters: {
+        //             console: [{
+        //                 module: 'good-squeeze',
+        //                 name: 'Squeeze',
+        //                 args: [{ error: '*', log: '*', response: '*' }]
+        //             }, {
+        //                 module: 'good-console',
+        //                 args: [{ color: false }],
+        //             }, 'stdout'],
+        //         },
+        //     },
+        // },
         {
             register: require('./plugins/cache'),
             options: options,

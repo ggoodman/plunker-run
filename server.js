@@ -1,12 +1,38 @@
 'use strict';
 
-require('@google/cloud-trace').start();
+const Fs = require('fs');
+const Errors = require('@google/cloud-errors');
+const Trace = require('@google/cloud-trace');
+let errors;
+
+// HACK: Working around https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/issues/303
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = Fs.realpathSync(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+
+    Trace.start();
+
+   errors = Errors({
+        projectId: process.env.GCLOUD_PROJECT,
+        logLevel: 0, // defaults to logging warnings (2). Available levels: 0-5
+        serviceContext: {
+            service: Package.name,
+            version: Package.version,
+        },
+    });
+}
 
 const Config = require('./config');
 const Hapi = require('hapi');
 const _ = require('lodash');
 
-const server = new Hapi.Server();
+const server = new Hapi.Server({
+    debug: process.env.NODE_ENV !== 'production'
+        ?   {
+                log: ['info', 'warn', 'error'],
+                // request: ['handler', 'received', 'response'],
+            }
+        :   false,
+});
 
 
 process.on('uncaughtException', function (e) {
@@ -23,10 +49,16 @@ server.connection({
     labels: ['run'],
 });
 
-server.register({
+const registrations = [{
     register: require('./index'),
     options: { config: Config },
-}, {
+}];
+
+if (errors) {
+    registrations.unshift(errors.hapi);
+}
+
+server.register(registrations, {
     select: ['run'],
 }, err => {
     if (err) {
