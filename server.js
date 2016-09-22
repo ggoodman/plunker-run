@@ -1,5 +1,7 @@
 'use strict';
 
+require('@google/cloud-trace').start();
+
 const Config = require('./config');
 const Hapi = require('hapi');
 const _ = require('lodash');

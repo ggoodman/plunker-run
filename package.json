@@ -26,6 +26,8 @@
   },
   "homepage": "https://github.com/ggoodman/plunker-run#readme",
   "dependencies": {
+    "@google/cloud-errors": "0.0.3",
+    "@google/cloud-trace": "^0.5.7",
     "async-cache": "^1.1.0",
     "babel-core": "^6.10.4",
     "babel-plugin-transform-es2015-modules-systemjs": "^6.9.0",

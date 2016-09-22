@@ -43,7 +43,7 @@ function register(server, options, next) {
             message: 'Redis error',
         });
     }
-    
+
     function onTimeout() {
         client.removeListener('ready', onReady);
         client.quit();
