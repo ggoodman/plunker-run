@@ -62,6 +62,10 @@ exports.register = function(server, options, next) {
             options: options,
         },
         {
+            register: require('./plugins/healthz'),
+            options: options,
+        },
+        {
             register: require('./plugins/renderer'),
             options: options,
         },

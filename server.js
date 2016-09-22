@@ -11,7 +11,7 @@ const server = new Hapi.Server();
 
 process.on('uncaughtException', function (e) {
     console.error('[UNCAUGHT EXCEPTION] %s', e.message, e.stack);
-    
+
     process.exit(1);
 });
 
@@ -31,14 +31,14 @@ server.register({
 }, err => {
     if (err) {
         server.log(['error', 'init'], `Error registering plugins: ${err.message}.`);
-        
+
         return stopServer();
     }
-    
+
     server.start(err => {
         if (err) {
             server.log(['error', 'init'], `Error starting server: ${err.message}.`);
-            
+
             return stopServer();
         }
 
@@ -51,7 +51,7 @@ server.register({
     function stopServer() {
         console.log('stopping the server');
         var next = server ? server.stop.bind(server) : process.nextTick;
-        
+
         next(function() {
             process.exit(1);
         });

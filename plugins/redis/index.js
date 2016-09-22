@@ -1,1 +1,1 @@
-module.exports = require('./redis.js');
+module.exports = require('./redis');
