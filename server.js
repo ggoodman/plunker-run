@@ -2,6 +2,7 @@
 
 const Fs = require('fs');
 const Errors = require('@google/cloud-errors');
+const Package = require('./package.json');
 const Trace = require('@google/cloud-trace');
 let errors;
 
