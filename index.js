@@ -26,24 +26,28 @@ exports.register = function(server, options, next) {
         {
             register: require('vision'),
         },
-        // {
-        //     register: require('good'),
-        //     options: {
-        //         ops: {
-        //             interval: 1000
-        //         },
-        //         reporters: {
-        //             console: [{
-        //                 module: 'good-squeeze',
-        //                 name: 'Squeeze',
-        //                 args: [{ error: '*', log: '*', response: '*' }]
-        //             }, {
-        //                 module: 'good-console',
-        //                 args: [{ color: false }],
-        //             }, 'stdout'],
-        //         },
-        //     },
-        // },
+        {
+            register: require('good'),
+            options: {
+                ops: {
+                    interval: 15000
+                },
+                reporters: {
+                    console: [{
+                        module: 'good-squeeze',
+                        name: 'Squeeze',
+                        args: [{ error: '*', log: '*', ops: '*', request: '*', response: '*' }]
+                    }, {
+                        module: 'good-squeeze',
+                        name: 'SafeJson',
+                        args: [
+                            null,
+                            { separator: '\n' },
+                        ],
+                    }, 'stdout'],
+                },
+            },
+        },
         {
             register: require('./plugins/cache'),
             options: options,

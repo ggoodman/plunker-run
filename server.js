@@ -27,12 +27,12 @@ const Hapi = require('hapi');
 const _ = require('lodash');
 
 const server = new Hapi.Server({
-    debug: process.env.NODE_ENV !== 'production'
-        ?   {
-                log: ['info', 'warn', 'error'],
-                // request: ['handler', 'received', 'response'],
-            }
-        :   false,
+    // debug: process.env.NODE_ENV !== 'production'
+    //     ?   {
+    //             log: ['info', 'warn', 'error'],
+    //             // request: ['handler', 'received', 'response'],
+    //         }
+    //     :   false,
 });
 
 
