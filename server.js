@@ -12,7 +12,7 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 
     Trace.start();
 
-   errors = Errors({
+    errors = Errors({
         projectId: process.env.GCLOUD_PROJECT,
         logLevel: 0, // defaults to logging warnings (2). Available levels: 0-5
         serviceContext: {

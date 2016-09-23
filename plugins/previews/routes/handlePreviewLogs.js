@@ -19,18 +19,18 @@ module.exports = {
         if (!request.pre.preview) {
             return reply(Boom.notFound());
         }
-        
-        const logs = request.pre.preview.getLogStream();
-        const response = reply(logs);
-     
+
+        // const logs = request.pre.preview.getLogStream();
+        const response = reply('\n');
+
         response.code(200)
             .type("text/event-stream")
-            .header("Connection", "keep-alive")
-            .header("Cache-Control", "no-cache")
-            .header("Content-Encoding", "identity");
-        
-        request.on('disconnect', function () {
-            logs.end();
-        });
+            // .header("Connection", "keep-alive")
+            // .header("Cache-Control", "no-cache")
+            // .header("Content-Encoding", "identity");
+
+        // request.on('disconnect', function () {
+        //     logs.end();
+        // });
     }
 };
