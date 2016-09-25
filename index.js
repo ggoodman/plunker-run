@@ -27,6 +27,9 @@ exports.register = function(server, options, next) {
             register: require('vision'),
         },
         {
+            register: require('hapijs-status-monitor'),
+        },
+        {
             register: require('good'),
             options: {
                 ops: {
