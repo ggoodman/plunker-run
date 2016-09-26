@@ -1,3 +1,6 @@
+'use strict';
+
+const Os = require('os');
 const Package = require('./package.json');
 
 
@@ -27,7 +30,21 @@ exports.register = function(server, options, next) {
             register: require('vision'),
         },
         {
-            register: require('hapijs-status-monitor'),
+            register: require('dogear'),
+            options: {
+                statsdConfig: {
+                    host: process.env.STATSD_HOST || 'localhost',
+                    port: process.env.STATSD_PORT || 8125,
+                    prefix: `${Os.hostname().split('.').join('_')}.${Package.name}.`,
+                    errorHandler: (error) => {
+                        server.log(['error'], {
+                            error: error.message,
+                            error_code: error.code,
+                            message: 'Error publishing metrics',
+                        });
+                    },
+                },
+            },
         },
         {
             register: require('good'),
