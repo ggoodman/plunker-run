@@ -35,7 +35,7 @@ exports.register = function(server, options, next) {
                 statsdConfig: {
                     host: process.env.STATSD_HOST || 'localhost',
                     port: process.env.STATSD_PORT || 8125,
-                    prefix: `${Os.hostname().split('.').join('_')}.${Package.name}.`,
+                    prefix: `${Package.name}.`,
                     errorHandler: (error) => {
                         server.log(['error'], {
                             error: error.message,

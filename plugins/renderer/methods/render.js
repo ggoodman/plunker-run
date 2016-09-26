@@ -28,29 +28,46 @@ function render(request) {
     const candidates = pathname
         ?   [pathname]
         :   ['index.html', 'README.html', 'demo.html'];
-    
+
     if (!preview) {
         return Bluebird.reject(Boom.notFound());
     }
-    
-        
+
+
     for (let candidate of candidates) {
-        const render = findRenderer(preview, candidate);
-        
-        if (render) {
-            return Bluebird.try(() => render(request));
+        const found = findRenderer(preview, candidate);
+
+        if (found) {
+            const start = Date.now();
+
+            return Bluebird.try(() => found.render(request))
+                .tap(() => {
+                    request.server.statsd.increment(`renderer.${found.name}.success.count`);
+                    request.server.statsd.increment(`renderer.success.count`, [`renderer:${found.name}`]);
+                })
+                .catch((error) => {
+                    request.server.statsd.increment(`renderer.${found.name}.error.count`);
+                    request.server.statsd.increment(`renderer.error.count`, [`renderer:${found.name}`]);
+
+                    throw error;
+                })
+                .finally(() => {
+                    request.server.statsd.increment(`renderer.${found.name}.count`);
+                    request.server.statsd.histogram(`renderer.latency`, Date.now() - start, [`renderer:${found.name}`]);
+                    request.server.statsd.histogram(`renderer.${found.name}.latency`, Date.now() - start);
+                });
         }
     }
-    
+
     return Bluebird.reject(Boom.notFound());
 }
 
 function findRenderer(preview, pathname) {
     for (let renderer of renderers) {
         const render = renderer.getRenderer(preview, pathname);
-        
+
         if (render) {
-            return render;
+            return { render, name: renderer.name };
         }
     }
 }
