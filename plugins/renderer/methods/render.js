@@ -22,7 +22,7 @@ const renderers = [
 
 
 
-function render(request) {
+function render(request, reply) {
     const pathname = request.params.pathname;
     const preview = request.pre.preview;
     const candidates = pathname
@@ -40,7 +40,7 @@ function render(request) {
         if (found) {
             const start = Date.now();
 
-            return Bluebird.try(() => found.render(request))
+            return Bluebird.try(() => found.render(request, reply))
                 .tap(() => {
                     request.server.statsd.increment(`renderer.${found.name}.success.count`);
                     request.server.statsd.increment(`renderer.success.count`, [`renderer:${found.name}`]);

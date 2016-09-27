@@ -1,9 +1,5 @@
 'use strict';
 
-const Bluebird = require('bluebird');
-const LRUCache = require('lru-cache');
-const _ = require('lodash');
-
 
 exports.register = function(server, options, next) {
     server.bind({

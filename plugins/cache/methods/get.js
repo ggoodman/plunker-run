@@ -11,7 +11,7 @@ function get(key, cb) {
     const server = this.server;
     const redis = server.plugins.redis;
 
-    return redis.client.hgetall(key, (error, entries) => {
+    return redis.client.get(key, (error, entries) => {
         if (error) {
             server.log(['error', 'redis'], {
                 error: error.message,
@@ -23,7 +23,7 @@ function get(key, cb) {
         }
 
         return entries
-            ?   cb(null, server.methods.previews.fromEntries(key, _.mapValues(entries, JSON.parse)))
+            ?   cb(null, server.methods.previews.fromEntries(key, JSON.parse(entries)))
             :   cb();
     });
 }

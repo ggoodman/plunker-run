@@ -8,6 +8,7 @@ const Typescript = require('typescript');
 const _ = require('lodash');
 
 
+const DEFINITIONS = Fs.readFileSync(require.resolve('typescript/lib/lib.d.ts'), 'utf8');
 const REQUEST_MATCH = /\.js$/;
 const SOURCE_EXT = ['.ts', '.tsx'];
 const USE_PROGRAM = false; // If we ever wanted to do multi-file compilation, this is a flag away.
@@ -21,37 +22,36 @@ module.exports = {
 
 function getRenderer(preview, pathname) {
     const tsConfigEntry = preview.get('tsconfig.json');
-    const definitions = Fs.readFileSync(require.resolve('typescript/lib/lib.d.ts'), 'utf8');
     const dependencies = [];
     let sourcename;
     let entry = preview.get(pathname);
-    
+
     if (entry && REQUEST_MATCH.test(pathname) && tsConfigEntry) {
         return render;
     }
-    
+
     if (preview.get(pathname)) {
         // Requested file exists. Don't compile
         return;
     }
-    
+
     for (const ext of SOURCE_EXT) {
         sourcename = pathname.replace(REQUEST_MATCH, ext);
         entry = REQUEST_MATCH.test(pathname)
             ?   preview.get(sourcename)
             :   undefined;
-        
+
         if (entry) {
             return render;
         }
     }
-    
+
     return;
-    
-    
+
+
     function render(request) {
         const code = entry.content.toString('utf8');
-        
+
         return new Bluebird((resolve, reject) => {
             const compilerOptions = _.extend({}, Typescript.getDefaultCompilerOptions(), {
                 jsx: Typescript.JsxEmit.React,
@@ -59,31 +59,31 @@ function getRenderer(preview, pathname) {
             const compilerHost = {
                 fileExists: (pathname) => {
                     const exists = !!preview.get(pathname.replace(/^\//, ''));
-                    
+
                     console.log('fileExists', pathname, exists);
-                    
+
                     return exists;
                 },
                 getSourceFile: (pathname, v) => {
                     if (pathname === '/lib.d.ts') {
-                        return Typescript.createSourceFile(pathname, definitions, v);
+                        return Typescript.createSourceFile(pathname, DEFINITIONS, v);
                     }
-                    
+
                     const entry = preview.get(pathname.replace(/^\//, ''));
-                    
+
                     // console.log('getSourceFile', pathname, v, entry);
-                    
+
                     dependencies.push(pathname);
-                    
+
                     if (!entry) throw Boom.notFound();
-                    
+
                     return Typescript.createSourceFile(pathname, entry.content.toString('utf8'), v);
                 },
                 writeFile: function (filename, text) {
                     const pathname = filename.split('/').filter(Boolean).join('/');
                     const encoding = 'utf8';
                     const content = new Buffer(text, encoding);
-                    
+
                     preview.addDynamicEntry(pathname, { content, encoding }, dependencies);
                 },
                 getDefaultLibFileName: _.constant('/lib.d.ts'),
@@ -96,63 +96,63 @@ function getRenderer(preview, pathname) {
                     const files = _(preview.entries)
                         .map(entry => {
                             const parts = entry.pathname.split('/');
-                            
+
                             if (extension && !Typescript.fileExtensionIs(entry.pathname, extension)) return;
-                            
+
                             if (baseParts.length) {
                                 for (let i = 0; i < baseParts.length; i++) {
                                     if (baseParts[i] !== parts[i]) return;
                                 }
-                                
+
                                 parts.splice(0, baseParts.length);
                             }
-                            
+
                             if (exclude && exclude.length) {
                                 for (let i = 0; i < exclude.length; i++) {
                                     if (entry.pathname.indexOf(exclude[i]) !== -1) return;
                                 }
                             }
-                            
+
                             return parts.length
                                 ?   '/' + parts.join('/')
                                 :   null;
                         })
                         .filter(Boolean)
                         .valueOf();
-                    
+
                     return files;
                 },
             };
-            
+
             if (tsConfigEntry) {
                 const json = Typescript.parseConfigFileTextToJson(tsConfigEntry.pathname, tsConfigEntry.content.toString('utf8'));
                 const parsed = Typescript.parseJsonConfigFileContent(json.config, compilerHost, '/', compilerOptions);
-                
+
                 dependencies.push('tsconfig.json');
-                
+
                 _.extend(compilerOptions, parsed.options);
             }
-            
+
             if (USE_PROGRAM) {
                 compilerOptions.noEmitOnError = true;
                 compilerOptions.files = ['/' + entry.filename];
-                
+
                 const program = Typescript.createProgram(['/' + entry.pathname], compilerOptions, compilerHost);
                 const emitResult = program.emit();
-                
+
                 const diagnostics = Typescript.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
-                
+
                 if (diagnostics.length) {
                     logDiagnostics(diagnostics);
                     return reject(new Error('Compilation failed'));
                 }
-            
+
                 const compiled = preview.get(pathname);
-                
+
                 if (!compiled) {
                     throw Boom.notFound();
                 }
-                
+
                 return resolve(compiled.content);
             } else {
                 const result = Typescript.transpileModule(code, {
@@ -166,14 +166,14 @@ function getRenderer(preview, pathname) {
                     logDiagnostics(diagnostics);
                     return reject(new Error('Compilation failed'));
                 }
-            
+
                 return resolve(result.outputText);
             }
-            
+
             function logDiagnostics(diagnostics) {
                 _.forEach(diagnostics, diagnostic => {
                     const pos = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-                    
+
                     preview.log({
                         renderer: 'typescript',
                         level: ['warn', 'error'][diagnostic.category],
@@ -189,11 +189,11 @@ function getRenderer(preview, pathname) {
                 throw Boom.wrap(e, 400);
             })
             .then(buildReply);
-        
-        
+
+
         function buildReply(payload) {
             const dynamicEntry = preview.addDynamicEntry(pathname, { content: payload }, dependencies);
-                    
+
             return Static.renderStatic(request, dynamicEntry);
         }
     }

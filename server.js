@@ -1,27 +1,5 @@
 'use strict';
 
-const Fs = require('fs');
-const Errors = require('@google/cloud-errors');
-const Package = require('./package.json');
-const Trace = require('@google/cloud-trace');
-let errors;
-
-// HACK: Working around https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/issues/303
-if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = Fs.realpathSync(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-
-    Trace.start();
-
-    errors = Errors({
-        projectId: process.env.GCLOUD_PROJECT,
-        logLevel: 0, // defaults to logging warnings (2). Available levels: 0-5
-        serviceContext: {
-            service: Package.name,
-            version: Package.version,
-        },
-    });
-}
-
 const Config = require('./config');
 const Hapi = require('hapi');
 const _ = require('lodash');
@@ -54,10 +32,6 @@ const registrations = [{
     register: require('./index'),
     options: { config: Config },
 }];
-
-if (errors) {
-    registrations.unshift(errors.hapi);
-}
 
 server.register(registrations, {
     select: ['run'],

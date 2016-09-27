@@ -13,7 +13,7 @@ const compile = Farm({
     maxCallTime: 1000 * 10,
     maxRetries: 0,
     autoStart: true,
-}, require.resolve('./babelWorker'));
+}, require.resolve('./workers/babelWorker'));
 
 
 const REQUEST_MATCH = /\.js$/;
@@ -29,35 +29,35 @@ module.exports = {
 function getRenderer(preview, pathname) {
     const babelRc = preview.get('.babelrc');
     let entry = preview.get(pathname);
-    
+
     if (entry && REQUEST_MATCH.test(pathname) && babelRc) {
         return render;
     }
-    
+
     if (preview.get(pathname)) {
         // Requested file exists. Don't compile
         return;
     }
-    
+
     for (const ext of SOURCE_EXT) {
         const sourcename = pathname.replace(REQUEST_MATCH, ext);
-        
+
         entry = REQUEST_MATCH.test(pathname)
             ?   preview.get(sourcename)
             :   undefined;
-        
+
         if (entry) {
             return render;
         }
     }
-    
+
     return;
 
 
-    function render(request) {
+    function render(request, reply) {
         const ifNoneMatch = request.headers['if-none-match'];
         const etagRx = new RegExp(`^"${entry.etag}\-${exports.name}-(gzip|deflate)"`);
-        
+
         // if (etagRx.test(ifNoneMatch)) {
         //     return Bluebird.resolve({
         //         encoding: 'utf-8',
@@ -68,18 +68,18 @@ function getRenderer(preview, pathname) {
         //         payload: '',
         //     });
         // }
-        
+
         return new Bluebird((resolve, reject) => {
-            const entries = _.reduce(preview.entries, (acc, entry, pathname) => 
+            const entries = _.reduce(preview.entries, (acc, entry, pathname) =>
                 (entry.encoding === 'utf-8' || entry.encoding === 'utf8')
                     ?   _.set(acc, [pathname], entry.content.toString(entry.encoding))
                     :   acc
             , {});
             // const compile = require('./babelWorker');
-            
+
             compile(preview.id, entries, pathname, entry.pathname, onWorkerResponse);
-            
-            
+
+
             function onWorkerResponse(err, result) {
                 if (err) {
                     if (err.type === 'SyntaxError') {
@@ -93,14 +93,14 @@ function getRenderer(preview, pathname) {
                             context: err.codeFrame,
                         });
                     }
-                    
+
                     return reject(Boom.wrap(err, 400));
                 }
-                
+
                 _.forEach(result.logs, log => preview.log(log));
-                
+
                 const dynamicEntry = preview.addDynamicEntry(pathname, result.entry, result.dependencies);
-                
+
                 return resolve(Static.renderStatic(request, dynamicEntry));
             }
         });
