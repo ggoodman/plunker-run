@@ -2,6 +2,7 @@
 
 const Bluebird = require('bluebird');
 const Boom = require('boom');
+const Crypto = require('crypto');
 const _ = require('lodash');
 
 
@@ -86,6 +87,7 @@ function pingRedis(server) {
 
 function runPreview(server) {
     const start = Date.now();
+    const previewId = Crypto.randomBytes(16).toString('hex');
     const preview = {
         files: {
             'index.html': {
@@ -117,7 +119,7 @@ function runPreview(server) {
     function createPreview() {
         return Bluebird.resolve(server.inject({
             method: 'POST',
-            url: '/preview/healthz',
+            url: `/preview/healthz-${previewId}`,
             payload: preview,
         }));
     }
@@ -134,7 +136,7 @@ function runPreview(server) {
     function requestPreview() {
         return server.inject({
             method: 'GET',
-            url: '/preview/healthz/',
+            url: `/preview/healthz-${previewId}/`,
         });
     }
 
@@ -148,7 +150,8 @@ function runPreview(server) {
                 expected: preview.files['index.html'].content,
                 message: 'Preview creation response has an unexpected payload',
             });
-            // throw Boom.badGateway('Preview creation response has an unexpected payload: ' + res.payload.toString('utf8'));
+
+            throw Boom.badGateway('Preview creation response has an unexpected payload: ' + res.payload.toString('utf8'));
         }
     }
 
