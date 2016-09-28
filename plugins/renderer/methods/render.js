@@ -2,16 +2,14 @@
 
 const Bluebird = require('bluebird');
 const Boom = require('boom');
-const _ = require('lodash');
 
-module.exports = render;
-
+// Order here is *important*
 const renderers = [
     require('../lib/babelRenderer'),
     require('../lib/typescriptRenderer'),
     require('../lib/base64Renderer'),
     require('../lib/staticRenderer'),
-    require('../lib/npmcdnRenderer'),
+    require('../lib/unpkgRenderer'),
     require('../lib/lessRenderer'),
     require('../lib/markdownRenderer'),
     require('../lib/coffeeRenderer'),
@@ -20,6 +18,8 @@ const renderers = [
     require('../lib/stylusRenderer'),
 ];
 
+
+module.exports = render;
 
 
 function render(request, reply) {
