@@ -21,17 +21,6 @@ exports.register.attributes = {
 function register(server, options, next) {
     server.log(['info', 'init'], `Started ${exports.register.attributes.name}@${exports.register.attributes.version}.`);
 
-    server.dependency([
-        'cache',
-        'previews',
-        'redis',
-        'renderer',
-    ], registerRoutes);
-
-    next();
-}
-
-function registerRoutes(server, next) {
     server.route({
         method: 'GET',
         path: '/healthz',
@@ -45,7 +34,7 @@ function handleHealthz(request, reply) {
     const server = request.server;
     const data = Bluebird.props({
         preview: runPreview(server),
-        redis: pingRedis(server.plugins.redis.client),
+        redis: pingRedis(server),
     });
 
     return data
@@ -64,7 +53,8 @@ function parseHealthData(health) {
     return { health, statusCode };
 }
 
-function pingRedis(client) {
+function pingRedis(server) {
+    const client = server.plugins.redis.client;
     const start = Date.now();
     const ping = Bluebird.promisify(client.ping, { context: client });
 
@@ -81,6 +71,12 @@ function pingRedis(client) {
             };
         })
         .catch((error) => {
+            server.log(['error', 'healthz', 'redis'], {
+                error: error.message,
+                error_code: error.code,
+                message: 'Redis health check failed',
+            });
+
             return {
                 latency: Date.now() - start,
                 status: 'ERROR',
@@ -105,6 +101,12 @@ function runPreview(server) {
         .tap(verifyPreviewGetResponse)
         .then(mapToHealthz)
         .catch((error) => {
+            server.log(['error', 'healthz', 'preview'], {
+                error: error.message,
+                error_code: error.code,
+                message: 'Preview health check failed',
+            });
+
             return {
                 latency: Date.now() - start,
                 status: 'ERROR',
