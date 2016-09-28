@@ -35,6 +35,7 @@ exports.register = function(server, options, next) {
                 statsdConfig: {
                     host: process.env.STATSD_HOST || 'localhost',
                     port: process.env.STATSD_PORT || 8125,
+                    globalTags: `plunker_run_hostname:${process.env.STATSD_HOST_TAG || Os.hostname()}`,
                     prefix: `${Package.name}.`,
                     errorHandler: (error) => {
                         server.log(['error'], {

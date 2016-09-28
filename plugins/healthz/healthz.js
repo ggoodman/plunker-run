@@ -91,7 +91,7 @@ function runPreview(server) {
     const preview = {
         files: {
             'index.html': {
-                content: Math.random().toString('16'),
+                content: previewId,
                 encoding: 'utf-8',
             },
         },
@@ -119,7 +119,7 @@ function runPreview(server) {
     function createPreview() {
         return Bluebird.resolve(server.inject({
             method: 'POST',
-            url: `/preview/healthz-${previewId}`,
+            url: `/preview/${previewId}`,
             payload: preview,
         }));
     }
@@ -128,7 +128,7 @@ function runPreview(server) {
         if (res.statusCode !== 302) {
             throw Boom.badGateway('Preview creation response has an unexpected status code: ' + res.statusCode);
         }
-        if (!res.headers.location || !res.headers.location.match(/\/preview\/healthz\/?$/)) {
+        if (res.headers.location !== `/preview/${previewId}`) {
             throw Boom.badGateway('Preview creation response has an unexpected location: ' + res.headers.location);
         }
     }
@@ -136,7 +136,7 @@ function runPreview(server) {
     function requestPreview() {
         return server.inject({
             method: 'GET',
-            url: `/preview/healthz-${previewId}/`,
+            url: `/preview/${previewId}/`,
         });
     }
 
