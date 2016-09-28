@@ -24,9 +24,6 @@ exports.register = function(server, options, next) {
             },
         },
         {
-            register: require('inert'),
-        },
-        {
             register: require('vision'),
         },
         {
