@@ -143,7 +143,12 @@ function runPreview(server) {
             throw Boom.badGateway('Preview creation response has an unexpected status code: ' + res.statusCode);
         }
         if (res.payload.toString('utf8') !== preview.files['index.html'].content) {
-            throw Boom.badGateway('Preview creation response has an unexpected payload: ' + res.payload.toString('utf8'));
+            server.log(['error', 'healthz', 'preview'], {
+                actual: res.payload.toString('utf8'),
+                expected: preview.files['index.html'].content,
+                message: 'Preview creation response has an unexpected payload',
+            });
+            // throw Boom.badGateway('Preview creation response has an unexpected payload: ' + res.payload.toString('utf8'));
         }
     }
 
