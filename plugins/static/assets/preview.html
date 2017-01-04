@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
     <style type="text/css">
         html, body {
             margin: 0;
@@ -92,9 +93,9 @@
         function handleRequest(data) {
             switch (data.type) {
                 case 'update': {
+                    var input;
                     var update = data[data.type];
                     var form = document.createElement('form');
-                    var input = document.createElement('input');
                     var iframe = document.getElementById('preview');
                     
                     iframe.name = 'preview';
@@ -102,21 +103,24 @@
                     for (var pathname in update.entries) {
                         var entry = update.entries[pathname];
                         
+                        input = document.createElement('input');
                         input.type = 'hidden';
                         input.name = 'files[' + pathname + '][content]';
                         input.value = entry.content;
                         
-                        form.appendChild(input.cloneNode());
+                        form.appendChild(input);
                         
+                        input = document.createElement('input');
                         input.type = 'hidden';
                         input.name = 'files[' + pathname + '][encoding]';
                         input.value = entry.encoding;
                         
-                        form.appendChild(input.cloneNode());
+                        form.appendChild(input);
                     }
                     
                     form.style.display = 'none';
                     form.action = update.url;
+                    form.enctype = 'multipart/form-data';
                     form.method = 'POST';
                     form.target = 'preview';
                     
