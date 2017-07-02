@@ -7,7 +7,7 @@ const Tripwire = require('tripwire');
 const TRIPWIRE_TIMEOUT = 2000;
 
 // Pre-load presets.
-require('babel-preset-es2015');
+require('babel-preset-env');
 require('babel-preset-react');
 require('babel-preset-stage-0');
 require('babel-preset-stage-1');
@@ -34,7 +34,7 @@ function compile(previewId, entries, pathname, sourcename, cb) {
     let options = {};
     
     if (Path.extname(sourcename) === '.jsx') {
-        options.presets = ['es2015', 'react'];
+        options.presets = ['env', 'react'];
     }
     
     if (babelRc) {
